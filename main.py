@@ -40,5 +40,9 @@ def register():
     return render_template("register.html", title="Register", form=form)
 
 
+@app.route("/contractor")
+def contractor():
+    return render_template("contractor_profile.html")
+
 if __name__ == "__main__":
     app.run(debug=True)
