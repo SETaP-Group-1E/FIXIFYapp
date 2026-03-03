@@ -14,7 +14,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///jobs.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# FIX: Path handling for Windows
+# Path handling for Windows
 base_dir = os.path.abspath(os.path.dirname(__file__))
 app.config['UPLOAD_FOLDER'] = os.path.join(base_dir, 'static', 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
@@ -33,9 +33,9 @@ class Job(db.Model):
     category = db.Column(db.String(50), nullable=False)
     urgency = db.Column(db.String(20), nullable=False)
     timing_window = db.Column(db.String(50), nullable=False)
-    budget = db.Column(db.Float)  # Budget amount
-    is_negotiable = db.Column(db.Boolean, default=False)  # Negotiability
-    photo_filename = db.Column(db.String(255))  # Photo filename
+    budget = db.Column(db.Float) 
+    is_negotiable = db.Column(db.Boolean, default=False) 
+    photo_filename = db.Column(db.String(255))  
     created_at = db.Column(db.DateTime, default=datetime.now)
 
 @app.before_request
@@ -158,4 +158,5 @@ def allowed_file(filename):
 if __name__ == '__main__':
     # view detailed logs
     app.logger.setLevel("DEBUG")
+    print(f"📁 Upload folder path: {app.config['UPLOAD_FOLDER']}")
     app.run(debug=True)
