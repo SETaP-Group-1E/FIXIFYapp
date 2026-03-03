@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if job %}Edit Job{% else %}Post a Job{% endif %} | Fixify</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --fixify-blue: #1a56a3;
+            --fixify-dark: #0d4a8c;
+            --fixify-light: #e6f0fa;
+        }
+        body {
+            background-color: #f8fbff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .logo-img {
+            width: 110px;
+            height: auto;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+        .brand-title {
+            color: var(--fixify-dark);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .form-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(26, 86, 163, 0.08);
+            padding: 2rem;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .btn-success {
+            background-color: var(--fixify-blue);
+            border-color: var(--fixify-dark);
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+        }
+        .btn-success:hover {
+            background-color: var(--fixify-dark);
+        }
+        .btn-link {
+            color: var(--fixify-blue);
+            font-weight: 600;
+        }
+        .btn-link:hover {
+            text-decoration: underline;
+            color: var(--fixify-dark);
+        }
+        .form-control:focus {
+            border-color: var(--fixify-blue);
+            box-shadow: 0 0 0 0.25rem rgba(26, 86, 163, 0.25);
+        }
+        .category-icon {
+            margin-right: 0.5rem;
+            width: 18px;
+            height: 18px;
+            display: inline-block;
+        }
+        .urgency-high {
+            background-color: #ffebee;
+            border-color: #ffcdd2;
+        }
+        .urgency-medium {
+            background-color: #fff8e1;
+            border-color: #ffecb3;
+        }
+        .urgency-low {
+            background-color: #e8f5e9;
+            border-color: #c8e6c9;
+        }
+        .photo-preview {
+            border-radius: 8px;
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            margin-bottom: 1rem;
+            border: 1px solid #e0e7f0;
+        }
+        .no-photo {
+            background: #f0f4f8;
+            border-radius: 8px;
+            width: 100%;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px dashed #cbd9ed;
+            color: #6c757d;
+        }
+        .photo-help {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
+        }
+        .budget-section {
+            background: #f8fbff;
+            border-radius: 8px;
+            padding: 1.25rem;
+            border: 1px solid #e0e7f0;
+        }
+        .current-photo {
+            margin-bottom: 1.5rem;
+        }
+        .current-photo-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .current-photo-img {
+            border-radius: 8px;
+            max-height: 200px;
+            object-fit: contain;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <!-- Logo & Title -->
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='images/Fixify.png') }}" 
+                 alt="Fixify Logo" 
+                 class="logo-img">
+            <h1 class="brand-title mt-3">
+                {% if job %}Edit Service Request{% else %}Post a Home Service Job{% endif %}
+            </h1>
+            <p class="text-muted">
+                {% if job %}Update your home service request details{% else %}Help is just one click away{% endif %}
+            </p>
+        </div>
+
+        <!-- Form Card -->
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+                <div class="form-card">
+                    <form method="POST" enctype="multipart/form-data">
+                        <!-- Hidden field to track if we're editing -->
+                        {% if job %}
+                            <input type="hidden" name="job_id" value="{{ job.id }}">
+                        {% endif %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Job Title</label>
+                            <input type="text" name="title" class="form-control form-control-lg" 
+                                   value="{{ job.title if job else '' }}" required>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="4" 
+                                      required>{{ job.description if job else '' }}</textarea>
+                        </div>
+                        
+                        <!-- Budget Section -->
+                        <div class="mb-4 budget-section">
+                            <h5 class="mb-3 d-flex align-items-center">
+                                <i class="bi bi-coin me-2" style="color: var(--fixify-blue);"></i>
+                                Budget Information
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Your Budget Amount ($)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" name="budget_amount" class="form-control" min="0" step="0.01" 
+                                           value="{{ job.budget if job and job.budget != None else '' }}" 
+                                           placeholder="e.g., 150.00" aria-label="Budget amount">
+                                </div>
+                                <div class="form-text">Leave blank if you're not sure about the budget</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Is this budget negotiable?</label>
+                                <div class="d-grid gap-2">
+                                    <div class="form-check p-3 border rounded">
+                                        <input class="form-check-input" type="radio" name="is_negotiable" id="negotiableYes" value="yes" 
+                                               {% if job and job.is_negotiable %}checked{% elif not job %}checked{% endif %}>
+                                        <label class="form-check-label d-flex justify-content-between w-100" for="negotiableYes">
+                                            <span><i class="bi bi-check-circle-fill text-success me-2"></i> Yes, it's negotiable</span>
+                                            <small class="text-muted">Service providers can suggest a different price</small>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="form-check p-3 border rounded">
+                                        <input class="form-check-input" type="radio" name="is_negotiable" id="negotiableNo" value="no" 
+                                               {% if job and not job.is_negotiable %}checked{% endif %}>
+                                        <label class="form-check-label d-flex justify-content-between w-100" for="negotiableNo">
+                                            <span><i class="bi bi-x-circle-fill text-danger me-2"></i> No, this is my final offer</span>
+                                            <small class="text-muted">Service providers must accept this amount</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Category</label>
+                            <select name="category" class="form-select" required>
+                                <option value="" disabled>Select a service category</option>
+                                <option value="Plumbing" {% if job and job.category == 'Plumbing' %}selected{% endif %}>💧 Plumbing</option>
+                                <option value="Electrical" {% if job and job.category == 'Electrical' %}selected{% endif %}>⚡ Electrical</option>
+                                <option value="Cleaning" {% if job and job.category == 'Cleaning' %}selected{% endif %}>🧹 Cleaning</option>
+                                <option value="Gardening" {% if job and job.category == 'Gardening' %}selected{% endif %}>🌿 Gardening</option>
+                                <option value="Painting" {% if job and job.category == 'Painting' %}selected{% endif %}>🎨 Painting</option>
+                                <option value="HVAC" {% if job and job.category == 'HVAC' %}selected{% endif %}>❄️ HVAC</option>
+                                <option value="Carpentry" {% if job and job.category == 'Carpentry' %}selected{% endif %}>🪵 Carpentry</option>
+                                <option value="Other" {% if job and job.category == 'Other' %}selected{% endif %}>🔧 Other</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Urgency Level</label>
+                            <div class="d-grid gap-2">
+                                <div class="form-check p-3 border rounded">
+                                    <input class="form-check-input" type="radio" name="urgency" id="urgencyHigh" value="High" 
+                                           {% if job and job.urgency == 'High' %}checked{% endif %} required>
+                                    <label class="form-check-label d-flex justify-content-between w-100" for="urgencyHigh">
+                                        <span><i class="bi bi-exclamation-circle-fill text-danger me-2"></i> High Urgency</span>
+                                        <small class="text-muted">Immediate attention needed</small>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check p-3 border rounded">
+                                    <input class="form-check-input" type="radio" name="urgency" id="urgencyMedium" value="Medium" 
+                                           {% if job and job.urgency == 'Medium' %}checked{% endif %} required>
+                                    <label class="form-check-label d-flex justify-content-between w-100" for="urgencyMedium">
+                                        <span><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i> Medium Urgency</span>
+                                        <small class="text-muted">Within 2-3 days</small>
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check p-3 border rounded">
+                                    <input class="form-check-input" type="radio" name="urgency" id="urgencyLow" value="Low" 
+                                           {% if job and job.urgency == 'Low' %}checked{% endif %} required>
+                                    <label class="form-check-label d-flex justify-content-between w-100" for="urgencyLow">
+                                        <span><i class="bi bi-check-circle-fill text-success me-2"></i> Low Urgency</span>
+                                        <small class="text-muted">Within a week</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Preferred Timing</label>
+                            <select name="timing_window" class="form-select" required>
+                                <option value="" disabled>Select your preferred timing</option>
+                                <option value="Morning (8am-12pm)" {% if job and job.timing_window == 'Morning (8am-12pm)' %}selected{% endif %}>🌅 Morning (8am-12pm)</option>
+                                <option value="Afternoon (12pm-5pm)" {% if job and job.timing_window == 'Afternoon (12pm-5pm)' %}selected{% endif %}>🌇 Afternoon (12pm-5pm)</option>
+                                <option value="Evening (5pm-9pm)" {% if job and job.timing_window == 'Evening (5pm-9pm)' %}selected{% endif %}>🌃 Evening (5pm-9pm)</option>
+                                <option value="Flexible" {% if job and job.timing_window == 'Flexible' %}selected{% endif %}>🔄 Flexible - I can adjust</option>
+                                <option value="Weekend Only" {% if job and job.timing_window == 'Weekend Only' %}selected{% endif %}>📅 Weekend Only</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Current Photo -->
+                        {% if job and job.photo_filename %}
+                        <div class="mb-4 current-photo">
+                            <span class="current-photo-label">Current Photo</span>
+                            <img src="{{ url_for('static', filename='uploads/' + job.photo_filename) }}" 
+                                 alt="Current service photo" 
+                                 class="current-photo-img">
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Update Photo (Optional)</label>
+                            <div class="mb-2">
+                                <div class="no-photo" id="photo-preview">
+                                    {% if job and job.photo_filename %}
+                                        <img src="{{ url_for('static', filename='uploads/' + job.photo_filename) }}" 
+                                             alt="Current photo" 
+                                             class="photo-preview">
+                                    {% else %}
+                                        <i class="bi bi-camera me-2"></i>
+                                        No photo selected
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <input type="file" name="photo" class="form-control" accept="image/*" 
+                                   onchange="previewPhoto(this)">
+                            <div class="photo-help">
+                                <i class="bi bi-info-circle me-1"></i> 
+                                {% if job and job.photo_filename %}
+                                    Upload a new photo (max 16MB) - existing photo will be replaced
+                                {% else %}
+                                    Upload a photo showing the issue (max 16MB)
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Location</label>
+                            <input type="text" name="location" class="form-control" 
+                                   value="{{ job.location if job else '' }}" placeholder="e.g., London, Portsmouth" required>
+                        </div>
+
+                        <div class="d-grid gap-3">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                {% if job %}Update Job{% else %}Post Job{% endif %}
+                            </button>
+                            <a href="/" class="btn btn-link text-center">← Back to Jobs</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            function previewPhoto(input) {
+                if (input.files && input.files[0]) {
+                    var reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        var preview = document.getElementById('photo-preview');
+                        preview.innerHTML = '<img src="' + e.target.result + '" class="photo-preview" alt="Preview">';
+                    }
+                    
+                    reader.readAsDataURL(input.files[0]);
+                }
+            }
+        </script>
+    </div>
+</body>
+</html>
