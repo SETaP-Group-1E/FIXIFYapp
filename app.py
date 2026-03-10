@@ -52,6 +52,11 @@ class Review(db.Model):
     photo_filename = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.now)
 
+    @property
+    def can_edit(self):
+        """Check if review can still be edited (within 24 hours)"""
+        return datetime.now() - self.created_at < timedelta(hours=24)
+
 @app.before_request
 def create_tables():
     # Don't delete database on every start - just create if needed
@@ -161,6 +166,135 @@ def delete_job(id):
     db.session.commit()
     return redirect(url_for('index'))
 
+@app.route('/complete/<int:job_id>')
+def mark_complete(job_id):
+    """Simulate marking a job as completed"""
+    job = Job.query.get_or_404(job_id)
+    job.status = 'completed'
+    job.service_provider_id = 1  # Simulate provider assignment
+    db.session.commit()
+    flash('Job marked as completed! You can now leave a review.', 'success')
+    return redirect(url_for('view_job', job_id=job_id))
+
+@app.route('/job/<int:job_id>')
+def view_job(job_id):
+    """View job details and reviews"""
+    job = Job.query.get_or_404(job_id)
+    # Get homeowner's public review (if any)
+    homeowner_review = Review.query.filter_by(job_id=job_id, reviewer_type='homeowner').first()
+    # Get provider's private review (if any)
+    provider_review = Review.query.filter_by(job_id=job_id, reviewer_type='provider').first()
+    
+    return render_template('job_detail.html', 
+                         job=job, 
+                         homeowner_review=homeowner_review,
+                         provider_review=provider_review)
+
+@app.route('/review/<int:job_id>', methods=['GET', 'POST'])
+def submit_review(job_id):
+    job = Job.query.get_or_404(job_id)
+    
+    # Verify job is completed
+    if job.status != 'completed':
+        flash('Cannot review until job is marked as completed.', 'error')
+        return redirect(url_for('view_job', job_id=job_id))
+    
+    # Determine if this is homeowner or provider reviewing
+    # In real app, we shall use current user role
+    # For demo, we'll use a simple logic: odd job IDs = homeowner review, even = provider review
+    is_homeowner = job_id % 2 == 1
+
+    # Check if there's already a review (for edit mode)
+    review = None
+    if request.args.get('edit') == 'true':
+        # Try to get existing review based on reviewer type
+        if is_homeowner:
+            review = Review.query.filter_by(job_id=job_id, reviewer_type='homeowner').first()
+        else:
+            review = Review.query.filter_by(job_id=job_id, reviewer_type='provider').first()
+        
+        # Check if edit window has expired
+        if review and not review.can_edit:
+            flash('Review can only be edited within 24 hours of submission.', 'error')
+            return redirect(url_for('view_job', job_id=job_id))
+        
+        # If no review found for edit, show error
+        if not review:
+            flash('No review found to edit.', 'error')
+            return redirect(url_for('view_job', job_id=job_id))
+    else:
+        # Prevent duplicate reviews
+        existing_review = Review.query.filter_by(job_id=job_id, 
+                                             reviewer_type='homeowner' if is_homeowner else 'provider').first()
+        if existing_review:
+            flash('You have already reviewed this job.', 'error')
+            return redirect(url_for('view_job', job_id=job_id))
+    
+    if request.method == 'POST':
+        # Handle photo upload
+        photo_filename = None
+        if 'photo' in request.files and request.files['photo'].filename != '':
+            file = request.files['photo']
+            if file and allowed_file(file.filename):
+                # Add review_ prefix to distinguish from job photos
+                filename = f"review_{secure_filename(file.filename)}"
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(file_path)
+                photo_filename = filename
+                print(f"✅ Saved review photo to: {file_path}")
+        
+        # Create or update review based on reviewer type
+        if review:
+            # We're editing an existing review
+            review.comment = request.form.get('comment', '')[:500]
+            review.photo_filename = photo_filename or review.photo_filename  # Keep existing if no new photo
+            
+            if is_homeowner:
+                review.quality_rating = int(request.form['quality_rating'])
+                review.punctuality_rating = int(request.form['punctuality_rating'])
+                review.communication_rating = int(request.form['communication_rating'])
+            else:
+                review.overall_rating = int(request.form['overall_rating'])
+                
+            db.session.commit()
+            flash('Review updated successfully!', 'success')
+        else:
+            # We're creating a new review
+            if is_homeowner:
+                review = Review(
+                    job_id=job_id,
+                    reviewer_type='homeowner',
+                    quality_rating=int(request.form['quality_rating']),
+                    punctuality_rating=int(request.form['punctuality_rating']),
+                    communication_rating=int(request.form['communication_rating']),
+                    comment=request.form.get('comment', '')[:500],
+                    photo_filename=photo_filename
+                )
+            else:
+                review = Review(
+                    job_id=job_id,
+                    reviewer_type='provider',
+                    overall_rating=int(request.form['overall_rating']),
+                    comment=request.form.get('comment', '')[:500],
+                    photo_filename=photo_filename
+                )
+            
+            db.session.add(review)
+            db.session.commit()
+            flash('Thank you for your review!', 'success')
+        
+        return redirect(url_for('view_job', job_id=job_id))
+    
+    return render_template('review.html', job=job, review=review, is_homeowner=is_homeowner)
+    
+@app.route('/report-review/<int:review_id>')
+def report_review(review_id):
+    """Report a review as inappropriate"""
+    review = Review.query.get_or_404(review_id)
+    # For demo, we'll just flash a message
+    flash('Review has been reported to administrators.', 'warning')
+    return redirect(url_for('view_job', job_id=review.job_id))
+
 @app.route('/static/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
@@ -174,4 +308,5 @@ if __name__ == '__main__':
     app.logger.setLevel("DEBUG")
     print(f"📁 Upload folder path: {app.config['UPLOAD_FOLDER']}")
     app.run(debug=True)
+
 
