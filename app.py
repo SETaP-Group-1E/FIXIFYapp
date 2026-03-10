@@ -4,11 +4,12 @@
 #Press Ctrl+Shift+P
 #Type SQLite: New Query and select it
 
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 from werkzeug.utils import secure_filename
+import secrets
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///jobs.db'
@@ -36,6 +37,19 @@ class Job(db.Model):
     budget = db.Column(db.Float) 
     is_negotiable = db.Column(db.Boolean, default=False) 
     photo_filename = db.Column(db.String(255))  
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    status = db.Column(db.String(20), default='pending') 
+
+class Review(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
+    reviewer_type = db.Column(db.String(20), nullable=False)  # 'homeowner' or 'provider'
+    quality_rating = db.Column(db.Integer)  # 1-5 stars
+    punctuality_rating = db.Column(db.Integer)  # 1-5 stars  
+    communication_rating = db.Column(db.Integer)  # 1-5 stars
+    overall_rating = db.Column(db.Integer)  # For provider-to-homeowner rating
+    comment = db.Column(db.String(500))
+    photo_filename = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.now)
 
 @app.before_request
@@ -160,3 +174,4 @@ if __name__ == '__main__':
     app.logger.setLevel("DEBUG")
     print(f"📁 Upload folder path: {app.config['UPLOAD_FOLDER']}")
     app.run(debug=True)
+
