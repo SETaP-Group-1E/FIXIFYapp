@@ -11,8 +11,8 @@
         </div>
         
         <div class="profile-nav">
-            <a href="#">Portfolio</a>
-            <a href="#">Reviews</a>
+            <a href="#" id="portfolio-link">Portfolio</a>
+            <a href="#" id="reviews-link">Reviews</a>
             <a href="#" class="btn-book">Book now</a>
         </div>
     </div>
@@ -39,7 +39,45 @@
         </div>
     </div>
 
-</div>
-</div>
+    <div class="reviews-section" style="display:none;">
+        <h3>Reviews</h3>
+        <div class="reviews-list">
+            <div class="review-item">
+                <p><strong>Jane D.</strong> — Excellent work, arrived on time and fixed everything.</p>
+                <p class="small">Rating: 5/5 • 2 days ago</p>
+            </div>
+            <div class="review-item">
+                <p><strong>Mark T.</strong> — Very professional and tidy.</p>
+                <p class="small">Rating: 4.5/5 • 1 week ago</p>
+            </div>
+            <div class="review-item">
+                <p><strong>Sara L.</strong> — Good communication and fair price.</p>
+                <p class="small">Rating: 4/5 • 3 weeks ago</p>
+            </div>
+        </div>
+    </div>
 
+</div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    const portfolioLink = document.getElementById('portfolio-link');
+    const reviewsLink = document.getElementById('reviews-link');
+    const portfolioSection = document.querySelector('.portfolio-section');
+    const reviewsSection = document.querySelector('.reviews-section');
+
+    function showPortfolio(){
+        if(portfolioSection) portfolioSection.style.display = '';
+        if(reviewsSection) reviewsSection.style.display = 'none';
+    }
+
+    function showReviews(){
+        if(portfolioSection) portfolioSection.style.display = 'none';
+        if(reviewsSection) reviewsSection.style.display = '';
+    }
+
+    if(portfolioLink) portfolioLink.addEventListener('click', function(e){ e.preventDefault(); showPortfolio(); });
+    if(reviewsLink) reviewsLink.addEventListener('click', function(e){ e.preventDefault(); showReviews(); });
+});
+</script>
 {% endblock %}
