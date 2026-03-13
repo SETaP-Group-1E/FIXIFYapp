@@ -168,7 +168,9 @@
                             {% endif %}
                             
                             <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="card-title mb-0 flex-grow-1">{{ job.title }}</h5>
+                                <a href="{{ url_for('view_job', job_id=job.id) }}" class="clickable-title">
+                                    <h5 class="card-title mb-0 flex-grow-1">{{ job.title }}</h5>
+                                </a>
                                 <span class="badge bg-light text-dark">{{ job.location }}</span>
                             </div>
                             
@@ -231,4 +233,5 @@
         {% endif %}
     </div>
 </body>
+
 </html>
