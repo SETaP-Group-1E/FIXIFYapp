@@ -12,6 +12,7 @@ from werkzeug.utils import secure_filename
 import secrets
 
 app = Flask(__name__)
+app.secret_key = secrets.token_hex(16)  # Generate a random secret key for session management
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///jobs.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -55,7 +56,7 @@ class Review(db.Model):
     @property
     def can_edit(self):
         """Check if review can still be edited (within 24 hours)"""
-        return datetime.now() - self.created_at < timedelta(hours=24)
+        return datetime.now() - self.created_at < timedelta(minutes=1)
 
 @app.before_request
 def create_tables():
@@ -308,5 +309,6 @@ if __name__ == '__main__':
     app.logger.setLevel("DEBUG")
     print(f"📁 Upload folder path: {app.config['UPLOAD_FOLDER']}")
     app.run(debug=True)
+
 
 
