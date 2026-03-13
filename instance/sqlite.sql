@@ -23,3 +23,4 @@ ORDER BY
   END;
 
 ALTER TABLE job ADD COLUMN status VARCHAR(20) DEFAULT 'pending';
+-- Run incase you run into a value error mentioning job_status not being present
