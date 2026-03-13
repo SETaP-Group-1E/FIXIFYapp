@@ -21,3 +21,5 @@ ORDER BY
     WHEN 'Medium' THEN 2 
     ELSE 3 
   END;
+
+ALTER TABLE job ADD COLUMN status VARCHAR(20) DEFAULT 'pending';
