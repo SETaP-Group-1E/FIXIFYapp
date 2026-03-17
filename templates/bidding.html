@@ -33,9 +33,35 @@
                         <small class="text-muted">{{ job['bids']|length }} bids received</small>
                     </div>
 
+                    {% if job.get('notifications') and job['notifications']|length > 0 %}
+                    <div class="alert alert-info py-2 mt-3 mb-0">
+                        <small><strong>Latest update:</strong> {{ job['notifications'][-1] }}</small>
+                    </div>
+                    {% endif %}
+
                     <hr>
                     <form action="/submit_bid" method="POST">
                         <input type="hidden" name="job_id" value="{{ job['id'] }}">
+
+                        <div class="form-group">
+                            <label class="font-weight-bold small text-uppercase" style="color: #280182;">Contractor</label>
+                            <select name="contractor_id" class="form-control" required>
+                                <option value="">Select contractor</option>
+                                <option value="1">John Smith</option>
+                                <option value="2">Sarah Ahmed</option>
+                                <option value="3">Michael Brown</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="font-weight-bold small text-uppercase" style="color: #280182;">Estimated Timeline</label>
+                            <input type="text" name="timeline" class="form-control" placeholder="e.g. 3 days" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="font-weight-bold small text-uppercase" style="color: #280182;">Explanation</label>
+                            <textarea name="explanation" class="form-control" rows="3" placeholder="Explain why your bid is suitable..." required></textarea>
+                        </div>
                         
                         <div class="form-group">
                             <label class="font-weight-bold small text-uppercase" style="color: #280182;">Your Bid Price</label>
