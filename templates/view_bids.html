@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 mb-4" style="border-radius: 15px;">
+        <div class="card-body p-4">
+            <h2 style="color: #280182;">{{ job['title'] }}</h2>
+            <p class="text-muted">{{ job['description'] }}</p>
+            <hr>
+            <div class="row">
+                <div class="col-md-4"><strong>Category:</strong> {{ job['category'] }}</div>
+                <div class="col-md-4"><strong>Urgency:</strong> {{ job['urgency'] }}</div>
+                <div class="col-md-4"><strong>Budget:</strong> ${{ job['budget'] }}</div>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="text-white mb-3">Received Bids ({{ job['bids']|length }})</h3>
+
+    <div class="list-group">
+        {% for bid in job['bids'] %}
+        <div class="list-group-item d-flex justify-content-between align-items-center mb-2 shadow-sm" style="border-radius: 10px;">
+            <div>
+                <h5 class="mb-0" style="color: #280182;">Contractor Offer</h5>
+                <small class="text-muted">Verified Fixify Provider</small>
+            </div>
+            <div class="text-right">
+                <h4 class="font-weight-bold mb-0">${{ bid }}</h4>
+                <button class="btn btn-sm btn-success mt-2">Accept Bid</button>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-light text-center">No bids received yet.</div>
+        {% endfor %}
+    </div>
+    
+    <a href="/bidding" class="btn btn-link text-white mt-3">← Back to Job List</a>
+</div>
+{% endblock %}
