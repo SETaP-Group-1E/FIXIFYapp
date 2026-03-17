@@ -17,16 +17,43 @@
     <h3 class="text-white mb-3">Received Bids ({{ job['bids']|length }})</h3>
 
     <div class="list-group">
-        {% for bid in job['bids'] %}
-        <div class="list-group-item d-flex justify-content-between align-items-center mb-2 shadow-sm" style="border-radius: 10px;">
-            <div>
-                <h5 class="mb-0" style="color: #280182;">Contractor Offer</h5>
-                <small class="text-muted">Verified Fixify Provider</small>
+        {% for bid in bids %}
+        <div class="list-group-item mb-3 shadow-sm" style="border-radius: 10px;">
+    
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0" style="color: #280182;">{{ bid.contractor_name }}</h5>
+                    <small class="text-muted">Rating: {{ bid.rating }} / 5</small>
+                </div>
+        
+                <div class="text-right">
+                    <h4 class="font-weight-bold mb-0">£{{ bid.amount }}</h4>
+                    <span class="badge badge-info">{{ bid.status }}</span>
+                </div>
             </div>
-            <div class="text-right">
-                <h4 class="font-weight-bold mb-0">${{ bid }}</h4>
-                <button class="btn btn-sm btn-success mt-2">Accept Bid</button>
+        
+            <hr>
+        
+            <p><strong>Timeline:</strong> {{ bid.timeline }}</p>
+            <p><strong>Explanation:</strong> {{ bid.explanation }}</p>
+        
+            <div class="mt-2">
+        
+                <a href="/contractor/{{ bid.contractor_id }}" class="btn btn-outline-primary btn-sm">
+                    View Contractor
+                </a>
+        
+                <form action="{{ url_for('update_bid_status') }}" method="POST" class="d-inline">
+                    <input type="hidden" name="job_id" value="{{ job['id'] }}">
+                    <input type="hidden" name="bid_id" value="{{ bid.id }}">
+        
+                    <button name="action" value="accept" class="btn btn-success btn-sm">Accept</button>
+                    <button name="action" value="reject" class="btn btn-danger btn-sm">Reject</button>
+                    <button name="action" value="clarification" class="btn btn-warning btn-sm">Clarify</button>
+                </form>
+        
             </div>
+        
         </div>
         {% else %}
         <div class="alert alert-light text-center">No bids received yet.</div>
