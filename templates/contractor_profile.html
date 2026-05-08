@@ -2,18 +2,19 @@
 {% block content %}
 
 <head> <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> </head>
-<div class="profile-wrapper">
-<div class="profile-card">
+<div class="wrapper">
+<div class="card">
     
-    <div class="profile-header">
-        <div class="profile-title">
-            <h1>Kacper Szeliga</h1> 
+    <div class="header">
+        <div class="title">
+            <h1>Kacper Szeliga</h1>
+            <hr>
+            <a href="#" class="btn-book">Book now</a> 
         </div>
         
-        <div class="profile-nav">
+        <div class="main-nav">
             <a href="#" id="portfolio-link">Portfolio</a>
             <a href="#" id="reviews-link">Reviews</a>
-            <a href="#" class="btn-book">Book now</a>
         </div>
     </div>
     
@@ -30,8 +31,9 @@
         <p><strong>Rating:</strong> 4.8/5 (based on 150 reviews)</p>
     </div>
 
-    <div class="portfolio-section">
-        <h3>Portfolio Preview</h3>
+
+    <h3>Portfolio Preview</h3>
+    <div class="portfolio-preview-image">
         <div class="portfolio-grid">
             <div class="portfolio-item">Project 1</div>
             <div class="portfolio-item">Project 2</div>
