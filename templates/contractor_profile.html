@@ -15,6 +15,11 @@
         <div class="main-nav">
             <a href="#" id="portfolio-link">Portfolio</a>
             <a href="#" id="reviews-link">Reviews</a>
+<<<<<<< HEAD
+=======
+            <a href="#" class="btn-book">Book now</a>
+            <button id="favourite-btn" class="favourite-btn">♡</button>
+>>>>>>> b34b415 (Favourite Contractors Feature Added)
         </div>
     </div>
     
@@ -67,6 +72,7 @@ document.addEventListener('DOMContentLoaded', function(){
     const reviewsLink = document.getElementById('reviews-link');
     const portfolioSection = document.querySelector('.portfolio-section');
     const reviewsSection = document.querySelector('.reviews-section');
+    const favouriteBtn = document.getElementById('favourite-btn');
 
     function showPortfolio(){
         if(portfolioSection) portfolioSection.style.display = '';
@@ -80,6 +86,21 @@ document.addEventListener('DOMContentLoaded', function(){
 
     if(portfolioLink) portfolioLink.addEventListener('click', function(e){ e.preventDefault(); showPortfolio(); });
     if(reviewsLink) reviewsLink.addEventListener('click', function(e){ e.preventDefault(); showReviews(); });
+
+    if(favouriteBtn){
+        let isFavourite = false;
+        favouriteBtn.addEventListener('click', function(){
+            isFavourite = !isFavourite;
+            if(isFavourite){
+                favouriteBtn.innerHTML = '♥';
+                favouriteBtn.classList.add('active');
+            }
+            else{
+                favouriteBtn.innerHTML = '♡';
+                favouriteBtn.classList.remove('active');
+            }
+        });
+    }
 });
 </script>
 {% endblock %}
