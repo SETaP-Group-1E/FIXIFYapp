@@ -1,14 +1,27 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 from forms import RegForm, LoginForm
+# from flask_socketio import SocketIO, send
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "0bd24ce2ce9d0ac49fea3f26561cc7fa4fe296ef22964a68594b489c804d4f3a"
+
+# socketio = SocketIO(app, cors_allowed_origins="*")
 
 
 @app.route("/")
 @app.route("/home")
 def home():
     return render_template("home.html")
+
+# @app.route('/chat')
+# def chat():
+#    return render_template('chat.html')
+
+
+# @socketio.on('message')
+# def handle_message(msg):
+#    print(f"Message received: {msg}")
+ #   send(msg  , broadcast=True)
 
 
 contractors = {
@@ -213,4 +226,5 @@ def contractor():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+        app.run(debug=True)
+# socketio.run(app, debug=True)

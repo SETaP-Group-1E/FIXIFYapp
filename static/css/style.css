@@ -49,7 +49,7 @@
     transition: background-color 0.2s ease-in-out;
 }
 
-.btn_book:hover {
+.btn-book:hover {
     background-color: #1a0054;
 
     text-decoration: none !important;
