@@ -33,6 +33,16 @@
                         <small class="text-muted">{{ job['bids']|length }} bids received</small>
                     </div>
 
+                    {% if job['recurring'] %}
+                        <span class="badge badge-success p-2 mb-3">
+                            Recurring Job - {{ job['recurring_frequency'] }} Week(s)
+                        </span>
+                    {% else %}
+                        <span class="badge badge-secondary p-2 mb-3">
+                            One-Time Job
+                        </span>
+                    {% endif %}
+
                     {% if job.get('notifications') and job['notifications']|length > 0 %}
                     <div class="alert alert-info py-2 mt-3 mb-0">
                         <small><strong>Latest update:</strong> {{ job['notifications'][-1] }}</small>
@@ -76,6 +86,24 @@
                             </div>
                         </div>
                     </form>
+                    <script>
+                        const recurYes = document.getElementById('recurYes');
+                        const recurNo = document.getElementById('recurNo');
+                        const frequency = document.getElementById('recurring_frequency');
+
+                        function toggleRecurringRequirement() {
+                            if (recurYes.checked) {
+                                frequency.required = true;
+                            } else {
+                                frequency.required = false;
+                            }
+                        }
+
+                        recurYes.addEventListener('change', toggleRecurringRequirement);
+                        recurNo.addEventListener('change', toggleRecurringRequirement);
+
+                        toggleRecurringRequirement();
+                    </script>
                     <div class="mt-3">
                         <a href="/job/{{ job['id'] }}" class="btn btn-outline-primary btn-sm">View Bids ({{ job['bids']|length }})</a>
                     </div>

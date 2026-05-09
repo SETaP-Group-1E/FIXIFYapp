@@ -45,6 +45,12 @@ def post():
         description = request.form.get('description')
         budget = request.form.get('budget_amount')
         negotiable = request.form.get('is_negotiable')
+        recurring = request.form.get('recurring')
+        recurring_frequency = request.form.get('recurring_frequency')
+        
+        if recurring == 'yes' and not recurring_frequency:
+            flash("Please select how often the job should recur.", "danger")
+            return redirect(url_for('post'))
 
         new_job = {
             'id': len(all_jobs) + 1,
@@ -52,6 +58,8 @@ def post():
             'description': description,
             'budget': budget if budget else "Open",
             'is_negotiable': True if negotiable == 'yes' else False,
+            'recurring': True if recurring == 'yes' else False,
+            'recurring_frequency': recurring_frequency,
             'bids': [],
             'notifications': []
         }

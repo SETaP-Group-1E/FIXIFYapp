@@ -120,6 +120,37 @@
                         <input type="text" name="location" class="form-control" placeholder="e.g. London" required>
                     </div>
 
+                    <div class="border rounded p-3 mb-2">
+                        <input type="radio" name="recurring" id="recurYes" value="yes" checked>
+                        <label for="recurYes" class="ml-2">
+                            Enable Automatic Posting
+                        </label>
+                    </div>
+
+                    <div class="border rounded p-3 mb-2">
+                        <input type="radio" name="recurring" id="recurNo" value="no">
+                        <label for="recurNo" class="ml-2">
+                            No maybe another time.
+                        </label>
+                    </div>
+
+                    <div class="mb-4" id="recurring-frequency-container">
+                        <label class="form-label">
+                            How often should this job repeat?
+                        </label>
+
+                        <select name="recurring_frequency" id="recurring_frequency" class="form-control">
+                            <option value="">Select frequency</option>
+                            <option value="1">Every Week</option>
+                            <option value="2">Every 2 Weeks</option>
+                            <option value="4">Every Month (4 weeks)</option>
+                            <option value="8">Every 2 Months (8 weeks)</option>
+                            <option value="12">Every 3 Months (12 weeks)</option>
+                            <option value="24">Every 6 Months (24 weeks)</option>
+                            <option value="48">Every 12 Months (48 weeks)</option>
+                        </select>
+                    </div>
+
                     <button type="submit" class="btn btn-success btn-lg btn-block">
                         {% if job %}Update Job{% else %}Post Job Now{% endif %}
                     </button>
@@ -140,5 +171,32 @@
             reader.readAsDataURL(input.files[0]);
         }
     }
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const recurYes = document.getElementById('recurYes');
+    const recurNo = document.getElementById('recurNo');
+
+    const frequency = document.getElementById('recurring_frequency');
+    const container = document.getElementById('recurring-frequency-container');
+
+    function toggleRecurringRequirement() {
+
+        if (recurYes.checked) {
+            container.style.display = 'block';
+            frequency.required = true;
+        } else {
+            container.style.display = 'none';
+            frequency.required = false;
+            frequency.value = "";
+        }
+    }
+
+    recurYes.addEventListener('change', toggleRecurringRequirement);
+    recurNo.addEventListener('change', toggleRecurringRequirement);
+
+    toggleRecurringRequirement();
+});
 </script>
 {% endblock %}
