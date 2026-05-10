@@ -1,8 +1,39 @@
 {% extends "layout.html" %}
 {% block content %}
-    {% for post in posts %}
-        <h1>{{post.title}}</h1>
-        <p>Posted by - {{post.name}} | Date posted - {{post.date_posted}}</p>
-        <p>{{post.content}}</p>
-    {% endfor %}
+<!-- Expanded: public home page now has role selection. -->
+<section class="hero-card mt-5">
+    <div class="row align-items-center">
+        <div class="col-lg-7">
+            <span class="eyebrow">Fixify home services</span>
+            <h1 class="display-4 font-weight-bold text-white mt-3">Choose how you want to use Fixify</h1>
+            <p class="lead text-light mt-3">
+                Homeowners can post jobs and review bids. Contractors can browse posted work and submit their best offer.
+            </p>
+        </div>
+        <div class="col-lg-5 mt-4 mt-lg-0">
+            <!-- Added: login choice decides which dashboard opens. -->
+            <div class="role-panel">
+                <a href="{{ url_for('login_as', role='homeowner') }}" class="role-card d-block mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3>Login as Homeowner</h3>
+                            <p>Post jobs, see your bid count, and accept, reject, or clarify contractor offers.</p>
+                        </div>
+                        <span class="role-arrow">→</span>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('login_as', role='contractor') }}" class="role-card d-block">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3>Login as Contractor</h3>
+                            <p>View available jobs and submit bids with a price, timeline, and explanation.</p>
+                        </div>
+                        <span class="role-arrow">→</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock content %}
