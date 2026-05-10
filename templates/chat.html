@@ -1,44 +1,36 @@
 {% extends "layout.html" %}
-
 {% block content %}
-<!-- Include the Socket.IO library specifically for this page -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-
-<div id="Messagebox">
-    <div id="messages"></div>
-    <div class="controls">
-        <input type="text" id="tempmessage" placeholder="Write a message" autocomplete="off">
-        <button id="sendBtn">Send</button>
+<!-- Added: chat page opens only after a bid is accepted. -->
+<div class="dashboard-header mt-5 mb-4">
+    <div>
+        <span class="eyebrow">Quick chat</span>
+        <h1 class="text-white font-weight-bold mt-2">{{ job['title'] }}</h1>
+        <p class="text-light mb-0">
+            Homeowner and {{ bid['contractor_name'] }} can coordinate the accepted job here.
+        </p>
     </div>
+    {% if session.get('role') == 'contractor' %}
+        <a href="{{ url_for('contractor_bids') }}" class="btn btn-fixify mt-3 mt-md-0">Back to My Bids</a>
+    {% else %}
+        <a href="{{ url_for('view_job_bids', job_id=job['id']) }}" class="btn btn-fixify mt-3 mt-md-0">Back to Bids</a>
+    {% endif %}
 </div>
 
-<script type="text/javascript">
-    document.addEventListener("DOMContentLoaded", () => {
-        const socket = io();
-        
-        socket.on('message', function(msg) {
-            const p = document.createElement('p'); 
-            p.classList.add('message'); 
-            p.innerHTML = `<strong>User:</strong> ${msg}`; 
-            document.getElementById('messages').appendChild(p); 
-            
-            const messagesDiv = document.getElementById('messages'); 
-            messagesDiv.scrollTop = messagesDiv.scrollHeight; 
-        });
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
 
-        document.getElementById('sendBtn').addEventListener('click', () => { 
-            const messageInput = document.getElementById('tempmessage'); 
-            if (messageInput.value.trim() !== "") { 
-                socket.send(messageInput.value); 
-                messageInput.value = ''; 
-            } 
-        }); 
-
-        document.getElementById('tempmessage').addEventListener('keypress', function (e) { 
-            if (e.key === 'Enter') { 
-                document.getElementById('sendBtn').click(); 
-            } 
-        }); 
-    }); 
-</script>
-{% endblock %}
+<div class="fixify-card mb-4">
+    <!-- Added: accepted bid summary. -->
+    <div class="job-meta mb-3">
+        <span>Status: {{ bid['status'] }}</span>
+        <span>Bid: £{{ bid['amount'] }}</span>
