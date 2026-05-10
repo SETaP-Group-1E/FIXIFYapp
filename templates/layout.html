@@ -7,24 +7,182 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 
-
     <style>
-        body { background-color: #8061ef; }
-        body { color: #280182; }
-
-        .topnav-right {
-            float: right;
+        /* Expanded: shared blue, black, and white theme. */
+        :root {
+            --fixify-blue: #0d6efd;
+            --fixify-blue-dark: #073b7a;
+            --fixify-black: #05070d;
+            --fixify-panel: #0d1322;
+            --fixify-white: #ffffff;
+            --fixify-muted: #b8c4d9;
         }
 
-        a {
-            color: gray;
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(13, 110, 253, 0.35), transparent 34rem),
+                linear-gradient(135deg, #05070d 0%, #081a33 55%, #000000 100%);
+            color: var(--fixify-white);
+            min-height: 100vh;
         }
 
-        a:hover {
-            color: lightgray;
-            transform: scale(1.2);
+        a { color: #dbeafe; }
+        a:hover { color: var(--fixify-white); text-decoration: none; }
+
+        .navbar {
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            background: rgba(0,0,0,0.86) !important;
+            backdrop-filter: blur(12px);
+        }
+
+        .navbar-brand {
+            color: var(--fixify-white) !important;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+        }
+
+        .nav-link { color: #c7d2fe !important; }
+        .nav-link:hover { color: var(--fixify-white) !important; }
+
+        .hero-card,
+        .fixify-card,
+        .role-panel,
+        .stat-card,
+        .empty-state {
+            background: rgba(13, 19, 34, 0.86);
+            border: 1px solid rgba(255,255,255,0.12);
+            box-shadow: 0 24px 60px rgba(0,0,0,0.28);
+            border-radius: 24px;
+        }
+
+        .hero-card { padding: 3rem; }
+        .role-panel { padding: 1rem; }
+        .fixify-card, .stat-card, .empty-state { padding: 1.5rem; }
+
+        .role-card {
+            background: linear-gradient(135deg, rgba(13, 110, 253, 0.28), rgba(255,255,255,0.05));
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 18px;
+            color: var(--fixify-white);
+            padding: 1.25rem;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .role-card:hover {
+            border-color: rgba(13, 110, 253, 0.95);
+            transform: translateY(-3px);
+        }
+
+        .role-card h3 { font-weight: 800; }
+        .role-card p { color: var(--fixify-muted); margin-bottom: 0; }
+        .role-arrow { color: var(--fixify-blue); font-size: 2rem; }
+
+        .eyebrow {
+            color: #7db7ff;
+            font-size: 0.8rem;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        .btn-fixify {
+            background: var(--fixify-blue);
+            border: 1px solid var(--fixify-blue);
+            color: var(--fixify-white);
+            font-weight: 700;
+            border-radius: 999px;
+            padding: 0.75rem 1.35rem;
+        }
+
+        .btn-fixify:hover {
+            background: #075bd8;
+            color: var(--fixify-white);
+        }
+
+        .dashboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-card span {
+            color: var(--fixify-muted);
+            display: block;
+            font-size: 0.9rem;
+        }
+
+        .stat-card strong {
+            color: var(--fixify-white);
+            display: block;
+            font-size: 2rem;
+            margin-top: 0.3rem;
+        }
+
+        .job-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .job-meta span {
+            background: rgba(13, 110, 253, 0.18);
+            border: 1px solid rgba(13, 110, 253, 0.32);
+            border-radius: 999px;
+            color: #dbeafe;
+            font-size: 0.85rem;
+            padding: 0.35rem 0.7rem;
+        }
+
+        .bid-count {
+            align-items: center;
+            background: var(--fixify-blue);
+            border-radius: 999px;
+            color: var(--fixify-white);
+            display: inline-flex;
+            font-weight: 800;
+            height: 2.4rem;
+            justify-content: center;
+            min-width: 2.4rem;
+        }
+
+        .empty-state {
+            color: var(--fixify-white);
+            text-align: center;
+        }
+
+        .empty-state p { color: var(--fixify-muted); }
+
+        /* Added: shared job photo styling. */
+        .job-photo {
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 18px;
+            height: 210px;
+            object-fit: cover;
+            width: 100%;
+        }
+
+        .portfolio-grid {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        }
+
+        .portfolio-item {
+            align-items: center;
+            background: rgba(13, 110, 253, 0.14);
+            border: 1px dashed rgba(125, 183, 255, 0.55);
+            border-radius: 16px;
+            color: var(--fixify-white);
+            display: flex;
+            min-height: 120px;
+            justify-content: center;
+            padding: 1rem;
+            text-align: center;
         }
     </style>
 
@@ -51,24 +209,36 @@
                 <a class="nav-link" href="/">Home</a>
             </li>
 
+            <!-- Expanded: navbar links depend on the selected role. -->
+            {% if session.get('role') == 'homeowner' %}
             <li class="nav-item">
-                <a class="nav-link" href="/contractor">Profile</a>
+                <a class="nav-link" href="{{ url_for('homeowner_dashboard') }}">My Jobs</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/bidding">Job Bid</a>
+                <a class="nav-link" href="/post">Post Job</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="/post">Job Post</a>
+                <a class="nav-link" href="{{ url_for('my_profile') }}">My Profile</a>
             </li>
+            {% elif session.get('role') == 'contractor' %}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('contractor_dashboard') }}">Available Jobs</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('contractor_bids') }}">My Bids</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('my_profile') }}">My Profile</a>
+            </li>
+            {% endif %}
         </ul>
 
-
         <div class="topnav-right">
-            <a class="nav-link" href="/chat">💬</a>
-        </div>
-        <div class="topnav-right">
-            <a class="nav-link" href="/register">Register</a>
-            <a class="nav-link" href="/login">Login</a>
+            {% if session.get('role') %}
+                <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+                <a class="nav-link" href="/">Login</a>
+            {% endif %}
         </div>
 
     </div>
