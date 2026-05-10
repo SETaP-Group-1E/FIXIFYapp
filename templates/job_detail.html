@@ -6,6 +6,7 @@
     <title>Job Details | Fixify</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
     <style>
         :root {
             --fixify-blue: #1a56a3;
@@ -140,6 +141,22 @@
             color: #856404;
             border: 1px solid #ffeaa7;
         }
+        .location-map-container {
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        #locationMap {
+            height: 300px;
+            width: 100%;
+            border-radius: 8px;
+        }
+        .map-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -180,6 +197,12 @@
                     <div class="mb-3">
                         <label class="form-label"><i class="bi bi-pin-map me-2"></i>Location</label>
                         <p class="mb-0">{{ job.location }}</p>
+                    </div>
+                    
+                    <!-- Location Map -->
+                    <div class="mb-3 location-map-container">
+                        <div id="locationMap"></div>
+                        <p class="map-label text-center">📍 Service location on map</p>
                     </div>
                     
                     <div class="mb-3">
@@ -400,6 +423,54 @@
                 flash.style.display = 'none';
             });
         }, 5000);
+    </script>
+
+    <!-- Leaflet Map Script -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script>
+        // Initialize map
+        const map = L.map('locationMap').setView([51.505, -0.09], 13);
+        
+        // Add OpenStreetMap tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Geocode location and add marker
+        const location = "{{ job.location }}";
+        if (location) {
+            // Use Nominatim (OpenStreetMap's geocoding service)
+            const geocodeUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(location)}&format=json`;
+            
+            fetch(geocodeUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        const result = data[0];
+                        const lat = parseFloat(result.lat);
+                        const lon = parseFloat(result.lon);
+                        
+                        // Center map on location
+                        map.setView([lat, lon], 15);
+                        
+                        // Add marker
+                        L.marker([lat, lon])
+                            .bindPopup(`<strong>Service Location</strong><br>${location}`)
+                            .addTo(map)
+                            .openPopup();
+                    } else {
+                        console.log('Location not found');
+                        // Show default view if geocoding fails
+                        map.setView([40, -95], 4);
+                    }
+                })
+                .catch(error => {
+                    console.error('Geocoding error:', error);
+                    // Show default view if geocoding fails
+                    map.setView([40, -95], 4);
+                });
+        }
     </script>
 </body>
 </html>
