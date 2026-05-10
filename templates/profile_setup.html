@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+{% block content %}
+<!-- Added: shared profile setup page after role selection. -->
+<section class="hero-card mt-5">
+    <div class="row align-items-start">
+        <div class="col-lg-5 mb-4 mb-lg-0">
+            <span class="eyebrow">{{ role }} profile</span>
+            <h1 class="text-white font-weight-bold mt-2">
+                {% if role == 'contractor' %}
+                    Set up your contractor profile
+                {% else %}
+                    Set up your homeowner profile
+                {% endif %}
+            </h1>
+            <p class="text-light">
+                {% if role == 'contractor' %}
+                    This is the profile homeowners see before choosing your bid. Portfolio is only shown for contractors.
+                {% else %}
+                    This is the profile contractors see once they are working with you.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="fixify-card">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="alert alert-{{ category }}" role="alert">{{ message }}</div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+
+                <form method="POST">
+                    <div class="form-group">
+                        <label class="font-weight-bold text-light">Display name</label>
+                        <input type="text" name="display_name" class="form-control" value="{{ profile.display_name }}" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label class="font-weight-bold text-light">Location</label>
+                            <input type="text" name="location" class="form-control" value="{{ profile.location }}" placeholder="Portsmouth">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label class="font-weight-bold text-light">Phone</label>
+                            <input type="text" name="phone" class="form-control" value="{{ profile.phone }}" placeholder="07...">
+                        </div>
+                    </div>
+
+                    {% if role == 'contractor' %}
+                    <div class="form-group">
+                        <label class="font-weight-bold text-light">Specialty</label>
+                        <input type="text" name="specialty" class="form-control" value="{{ profile.specialty }}" placeholder="Plumbing, electrical, gardening..." required>
+                    </div>
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label class="font-weight-bold text-light">About you</label>
+                        <textarea name="bio" class="form-control" rows="4" placeholder="Write a short profile summary...">{{ profile.bio }}</textarea>
+                    </div>
+
+                    {% if role == 'contractor' %}
+                    <div class="form-group">
+                        <label class="font-weight-bold text-light">Portfolio</label>
+                        <textarea name="portfolio" class="form-control" rows="4" placeholder="Add one portfolio item per line...">{{ profile.portfolio }}</textarea>
+                        <small class="text-light">Example: Bathroom pipe replacement</small>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex flex-wrap mt-4" style="gap: 0.75rem;">
+                        <button type="submit" class="btn btn-fixify">Save Profile</button>
+                        <a href="{{ dashboard_url }}" class="btn btn-outline-light">Back</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
