@@ -193,6 +193,77 @@ def update_bid_status():
         flash("Invalid action.", "danger")
 
     return redirect(url_for('view_job_bids', job_id=job_id))
+def save_review_to_db(job, reviewer_type, review_data, bid=None):
+    # Added: save completed bidding reviews into the merged review table.
+    if not should_use_database():
+        return None
+
+    sync_job_to_db(job, status="completed")
+    review_query = Review.query.filter_by(job_id=job["id"], reviewer_type=reviewer_type)
+    if bid is not None:
+        review_query = review_query.filter_by(bid_id=bid.get("id"))
+
+    review = review_query.first()
+    if review is None:
+        review = Review(job_id=job["id"], reviewer_type=reviewer_type)
+
+    review.bid_id = bid.get("id") if bid is not None else review_data.get("bid_id")
+    review.homeowner_id = review_data.get("homeowner_id", DEFAULT_HOMEOWNER_ID)
+    review.contractor_id = (
+        bid.get("contractor_id") if bid is not None
+        else review_data.get("contractor_id", DEFAULT_CONTRACTOR_ID)
+    )
+    review.comment = review_data.get("comment", "")
+    review.photo_filename = review_data.get("photo_filename")
+
+    if reviewer_type == "homeowner":
+        review.quality_rating = review_data.get("quality_rating")
+        review.punctuality_rating = review_data.get("punctuality_rating")
+        review.communication_rating = review_data.get("communication_rating")
+    else:
+        review.overall_rating = review_data.get("overall_rating")
+
+    db.session.add(review)
+    db.session.commit()
+    return review
+
+
+def get_review_from_db(job_id, reviewer_type, bid_id=None):
+    # Added: read persisted reviews for bidding pages.
+    if not should_use_database():
+        return None
+
+    review_query = Review.query.filter_by(job_id=job_id, reviewer_type=reviewer_type)
+    if bid_id is not None:
+        review_query = review_query.filter_by(bid_id=bid_id)
+
+    return review_query.first()
+
+
+def get_review_created_at(review):
+    # Added: handle both database review objects and in-memory review dictionaries.
+    if review is None:
+        return None
+    if isinstance(review, dict):
+        return review.get("created_at")
+    return getattr(review, "created_at", None)
+
+
+def get_review_photo_filename(review):
+    # Added: handle review photos from DB objects and in-memory dictionaries.
+    if review is None:
+        return None
+    if isinstance(review, dict):
+        return review.get("photo_filename")
+    return getattr(review, "photo_filename", None)
+
+
+def can_edit_review(review):
+    # Added: reviews are only editable during the first minute.
+    created_at = get_review_created_at(review)
+    if created_at is None:
+        return True
+    return datetime.now() - created_at < timedelta(minutes=1)
 
 
 @app.route("/contractor/<int:contractor_id>")
