@@ -1,102 +1,112 @@
 {% extends "layout.html" %}
 {% block content %}
-
-<head> <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> </head>
-<div class="wrapper">
-<div class="card">
-    
-    <div class="header">
-        <div class="title">
-            <h1>Kacper Szeliga</h1>
-            <hr>
-            <a href="#" class="btn-book">Book now</a> 
+<!-- Expanded: contractor profile now uses saved DB profile and review data. -->
+<section class="mt-5">
+    {% set bio_text = profile.bio if profile.bio else (contractor.bio if contractor else 'No profile summary added yet.') %}
+    {% set specialty_text = profile.specialty if profile.specialty else (contractor.specialty if contractor else 'General repairs') %}
+    <div class="dashboard-header mb-4">
+        <div>
+            <span class="eyebrow">Contractor profile</span>
+            <h1 class="text-white font-weight-bold mt-2">{{ profile.display_name }}</h1>
+            <p class="text-light mb-0">{{ bio_text }}</p>
         </div>
-        
-        <div class="main-nav">
-            <a href="#" id="portfolio-link">Portfolio</a>
-            <a href="#" id="reviews-link">Reviews</a>
-            <button id="favourite-btn" class="favourite-btn">♡</button>
-        </div>
-    </div>
-    
-    <div class="profile-info">
-        <hr>
-        <p><strong>Location:</strong> Portsmouth (3.44 miles away)</p>
-        <p><strong>Contact:</strong> 07890 123456</p>
-        <p><strong>Specialty:</strong> Plumbing</p>
-        <p><strong><a href="#">Certifications</a></strong></p>
-        <hr>   
-
-        <p>Kacper is a highly skilled plumber with over 10 years of experience in the industry. He has a strong track record of successfully completing a wide range of plumbing projects, from small repairs to large installations. Kacper is known for his attention to detail, professionalism, and excellent customer service. He is committed to providing high-quality workmanship and ensuring customer satisfaction.</p>
-        
-        <p><strong>Rating:</strong> 4.8/5 (based on 150 reviews)</p>
-    </div>
-
-
-    <h3>Portfolio Preview</h3>
-    <div class="portfolio-preview-image">
-        <div class="portfolio-grid">
-            <div class="portfolio-item">Project 1</div>
-            <div class="portfolio-item">Project 2</div>
-            <div class="portfolio-item">Project 3</div>
+        <div class="d-flex flex-wrap" style="gap: 0.5rem;">
+            {% if session.get('role') == 'contractor' %}
+            <a href="{{ url_for('setup_profile', role='contractor') }}" class="btn btn-outline-light">Edit Profile</a>
+            {% endif %}
+            <a href="{{ url_for('contractor_dashboard') }}" class="btn btn-fixify">Available Jobs</a>
         </div>
     </div>
 
-    <div class="reviews-section" style="display:none;">
-        <h3>Reviews</h3>
-        <div class="reviews-list">
-            <div class="review-item">
-                <p><strong>Jane D.</strong> — Excellent work, arrived on time and fixed everything.</p>
-                <p class="small">Rating: 5/5 • 2 days ago</p>
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <span>Specialty</span>
+                <strong style="font-size: 1.25rem;">{{ specialty_text }}</strong>
             </div>
-            <div class="review-item">
-                <p><strong>Mark T.</strong> — Very professional and tidy.</p>
-                <p class="small">Rating: 4.5/5 • 1 week ago</p>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <span>Location</span>
+                <strong style="font-size: 1.25rem;">{{ profile.location or 'Not added' }}</strong>
             </div>
-            <div class="review-item">
-                <p><strong>Sara L.</strong> — Good communication and fair price.</p>
-                <p class="small">Rating: 4/5 • 3 weeks ago</p>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <span>Contact</span>
+                <strong style="font-size: 1.25rem;">{{ profile.phone or 'Not added' }}</strong>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <span>Homeowner reviews</span>
+                <strong>{{ reviews|length }}</strong>
             </div>
         </div>
     </div>
 
-</div>
-</div>
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-    const portfolioLink = document.getElementById('portfolio-link');
-    const reviewsLink = document.getElementById('reviews-link');
-    const portfolioSection = document.querySelector('.portfolio-section');
-    const reviewsSection = document.querySelector('.reviews-section');
-    const favouriteBtn = document.getElementById('favourite-btn');
+    <div class="row">
+        <div class="col-lg-5 mb-4">
+            <div class="fixify-card h-100">
+                <span class="eyebrow">Portfolio</span>
+                <h3 class="text-white font-weight-bold mt-2">Previous work</h3>
+                <p class="text-light">Portfolio is shown only for contractor profiles.</p>
 
-    function showPortfolio(){
-        if(portfolioSection) portfolioSection.style.display = '';
-        if(reviewsSection) reviewsSection.style.display = 'none';
-    }
+                {% if portfolio_items %}
+                    <div class="portfolio-grid">
+                        {% for item in portfolio_items %}
+                        <div class="portfolio-item">{{ item }}</div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <h4>No portfolio added yet</h4>
+                        <p>Add portfolio examples from Edit Profile.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
 
-    function showReviews(){
-        if(portfolioSection) portfolioSection.style.display = 'none';
-        if(reviewsSection) reviewsSection.style.display = '';
-    }
+        <div class="col-lg-7 mb-4">
+            <div class="fixify-card h-100">
+                <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+                    <div>
+                        <span class="eyebrow">Reviews</span>
+                        <h3 class="text-white font-weight-bold mb-0">Saved homeowner reviews</h3>
+                    </div>
+                    {% if average_rating %}
+                    <span class="badge badge-primary p-2">Average {{ average_rating }}/5</span>
+                    {% endif %}
+                </div>
 
-    if(portfolioLink) portfolioLink.addEventListener('click', function(e){ e.preventDefault(); showPortfolio(); });
-    if(reviewsLink) reviewsLink.addEventListener('click', function(e){ e.preventDefault(); showReviews(); });
-
-    if(favouriteBtn){
-        let isFavourite = false;
-        favouriteBtn.addEventListener('click', function(){
-            isFavourite = !isFavourite;
-            if(isFavourite){
-                favouriteBtn.innerHTML = '♥';
-                favouriteBtn.classList.add('active');
-            }
-            else{
-                favouriteBtn.innerHTML = '♡';
-                favouriteBtn.classList.remove('active');
-            }
-        });
-    }
-});
-</script>
-{% endblock %}
+                {% if reviews %}
+                    {% for review in reviews %}
+                    <div class="alert alert-light">
+                        <div class="d-flex justify-content-between flex-wrap">
+                            <strong>Homeowner review for job #{{ review.job_id }}</strong>
+                            <span>{{ review_score(review) }}/5</span>
+                        </div>
+                        <div class="small mt-2">
+                            Quality: {{ review.quality_rating }}/5 |
+                            Punctuality: {{ review.punctuality_rating }}/5 |
+                            Communication: {{ review.communication_rating }}/5
+                        </div>
+                        {% if review.comment %}
+                        <p class="mb-1 mt-2">{{ review.comment }}</p>
+                        {% endif %}
+                        {% if review.photo_filename %}
+                        <a href="{{ url_for('uploaded_file', filename=review.photo_filename) }}" target="_blank">View review photo</a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <h4>No homeowner reviews yet</h4>
+                        <p>Reviews appear here permanently after completed jobs.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock content %}
