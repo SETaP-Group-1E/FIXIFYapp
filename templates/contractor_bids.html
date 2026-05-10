@@ -1,0 +1,223 @@
+{% extends "layout.html" %}
+{% block content %}
+<!-- Added: contractor bid history and accepted jobs. -->
+<div class="dashboard-header mt-5 mb-4">
+    <div>
+        <span class="eyebrow">Contractor bids</span>
+        <h1 class="text-white font-weight-bold mt-2">My Bids</h1>
+        <p class="text-light mb-0">
+            {% if current_contractor %}
+                Track accepted, rejected, pending, and clarification bids for {{ current_contractor['name'] }}.
+            {% else %}
+                Track your submitted bid outcomes.
+            {% endif %}
+        </p>
+    </div>
+    <div class="d-flex flex-wrap mt-3 mt-md-0" style="gap: 0.5rem;">
+        <a href="{{ url_for('my_profile') }}" class="btn btn-outline-light">My Profile</a>
+        <a href="{{ url_for('contractor_dashboard') }}" class="btn btn-fixify">Back to Jobs</a>
+    </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+{% if chat_notifications %}
+<!-- Added: quick chat alerts for unread homeowner messages. -->
+<div class="mb-4">
+    {% for notification in chat_notifications %}
+    <a href="{{ url_for('quick_chat', job_id=notification.job_id, bid_id=notification.bid_id) }}" class="alert alert-info d-block text-decoration-none">
+        <strong>New quick chat message</strong> from {{ notification.sender }} about "{{ notification.job_title }}":
+        {{ notification.message }}
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="row mb-4">
+    <!-- Added: bid status summary cards. -->
+    <div class="col-md mb-3">
+        <div class="stat-card">
+            <span>Accepted</span>
+            <strong>{{ status_counts['Accepted'] }}</strong>
+        </div>
+    </div>
+    <div class="col-md mb-3">
+        <div class="stat-card">
+            <span>Completed</span>
+            <strong>{{ status_counts['Completed'] }}</strong>
+        </div>
+    </div>
+    <div class="col-md mb-3">
+        <div class="stat-card">
+            <span>Rejected</span>
+            <strong>{{ status_counts['Rejected'] }}</strong>
+        </div>
+    </div>
+    <div class="col-md mb-3">
+        <div class="stat-card">
+            <span>Pending</span>
+            <strong>{{ status_counts['Pending'] }}</strong>
+        </div>
+    </div>
+    <div class="col-md mb-3">
+        <div class="stat-card">
+            <span>Clarification</span>
+            <strong>{{ status_counts['Clarification Requested'] + status_counts['Clarification Provided'] }}</strong>
+        </div>
+    </div>
+</div>
+
+{% if accepted_jobs %}
+<!-- Added: accepted jobs and completion status. -->
+<h3 class="text-white mb-3">Accepted Jobs / Completion</h3>
+<div class="row">
+    {% for item in accepted_jobs %}
+    {% set job = item['job'] %}
+    {% set bid = item['bid'] %}
+    {% set homeowner_review = item['homeowner_review'] %}
+    <div class="col-lg-6 mb-4">
+        <div class="fixify-card h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h4 class="font-weight-bold text-white">{{ job['title'] }}</h4>
+                    <p class="text-light">{{ job['description'] }}</p>
+                </div>
+                <span class="badge badge-success p-2">{{ bid['status'] }}</span>
+            </div>
+
+            <div class="job-meta my-3">
+                <span>{{ job['category'] }}</span>
+                <span>{{ job['urgency'] }}</span>
+                <span>{{ job['location'] }}</span>
+            </div>
+
+            <p class="text-light mb-1"><strong>Bid amount:</strong> £{{ bid['amount'] }}</p>
+            <p class="text-light mb-1"><strong>Timeline:</strong> {{ bid['timeline'] }}</p>
+            <p class="text-light mb-0"><strong>Explanation:</strong> {{ bid['explanation'] or 'No explanation added' }}</p>
+
+            {% if homeowner_review %}
+            <!-- Added: homeowner review is shown to the contractor after it is saved. -->
+            <div class="alert alert-success py-2 mt-3 mb-0">
+                <strong>Homeowner review:</strong>
+                <div class="small mt-1">
+                    Quality: {{ homeowner_review.quality_rating }}/5 |
+                    Punctuality: {{ homeowner_review.punctuality_rating }}/5 |
+                    Communication: {{ homeowner_review.communication_rating }}/5
+                </div>
+                {% if homeowner_review.comment %}
+                <div class="small mt-1">"{{ homeowner_review.comment }}"</div>
+                {% endif %}
+                {% if homeowner_review.photo_filename %}
+                <a href="{{ url_for('uploaded_file', filename=homeowner_review.photo_filename) }}" class="small d-inline-block mt-1" target="_blank">
+                    View review photo
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="alert alert-primary py-2 mt-3 mb-0">
+                <small>
+                    <strong>{{ bid['completion_status'] }}</strong>
+                    | Homeowner: {{ 'Done' if bid['homeowner_completed'] else 'Waiting' }}
+                    | Contractor: {{ 'Done' if bid['contractor_completed'] else 'Waiting' }}
+                </small>
+            </div>
+
+            <div class="d-flex flex-wrap mt-3" style="gap: 0.5rem;">
+                <a href="{{ url_for('quick_chat', job_id=job['id'], bid_id=bid['id']) }}" class="btn btn-fixify btn-sm">
+                    Open Quick Chat
+                </a>
+
+                {% if not bid['contractor_completed'] %}
+                <form action="{{ url_for('complete_job', job_id=job['id'], bid_id=bid['id']) }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-success btn-sm">Mark Completed as Contractor</button>
+                </form>
+                {% endif %}
+
+                {% if is_bid_completed(bid) %}
+                <a href="{{ url_for('submit_review', job_id=job['id'], bid_id=bid['id']) }}" class="btn btn-outline-success btn-sm">
+                    Leave Review
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if other_bids %}
+<!-- Added: pending, rejected, and clarification bids. -->
+<h3 class="text-white mb-3">Bid History</h3>
+<div class="row">
+    {% for item in other_bids %}
+    {% set job = item['job'] %}
+    {% set bid = item['bid'] %}
+    <div class="col-lg-6 mb-4">
+        <div class="fixify-card h-100">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h4 class="font-weight-bold text-white">{{ job['title'] }}</h4>
+                    <p class="text-light">{{ job['description'] }}</p>
+                </div>
+                {% if bid['status'] == 'Rejected' %}
+                    <span class="badge badge-danger p-2">{{ bid['status'] }}</span>
+                {% elif bid['status'] == 'Clarification Requested' %}
+                    <span class="badge badge-warning p-2">{{ bid['status'] }}</span>
+                {% else %}
+                    <span class="badge badge-info p-2">{{ bid['status'] }}</span>
+                {% endif %}
+            </div>
+
+            <div class="job-meta my-3">
+                <span>{{ job['category'] }}</span>
+                <span>{{ job['urgency'] }}</span>
+                <span>{{ job['location'] }}</span>
+            </div>
+
+            <p class="text-light mb-1"><strong>Bid amount:</strong> £{{ bid['amount'] }}</p>
+            <p class="text-light mb-1"><strong>Timeline:</strong> {{ bid['timeline'] }}</p>
+            <p class="text-light mb-0"><strong>Explanation:</strong> {{ bid['explanation'] or 'No explanation added' }}</p>
+
+            {% if bid['status'] == 'Clarification Requested' %}
+            <!-- Added: contractor clarification reply box. -->
+            <div class="alert alert-warning mt-3 mb-0">
+                <h6 class="font-weight-bold">Clarify your bid</h6>
+                <p class="mb-2">The homeowner asked for more information before deciding.</p>
+                <form action="{{ url_for('submit_clarification') }}" method="POST">
+                    <input type="hidden" name="job_id" value="{{ job['id'] }}">
+                    <input type="hidden" name="bid_id" value="{{ bid['id'] }}">
+                    <textarea name="clarification_response" class="form-control mb-2" rows="3" placeholder="Add details about your price, timeline, or approach..." required>{{ bid.get('clarification_response', '') }}</textarea>
+                    <button type="submit" class="btn btn-dark btn-sm">Send Clarification</button>
+                </form>
+            </div>
+            {% elif bid.get('clarification_response') %}
+            <div class="alert alert-info mt-3 mb-0">
+                <strong>Clarification sent:</strong> {{ bid['clarification_response'] }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if not accepted_jobs and not other_bids %}
+<div class="empty-state">
+    <h3>No bids submitted yet</h3>
+    <p>Submit a bid on an available job, then accepted or rejected outcomes will appear here.</p>
+    <a href="{{ url_for('contractor_dashboard') }}" class="btn btn-fixify">Browse Jobs</a>
+</div>
+{% endif %}
+{% endblock content %}
