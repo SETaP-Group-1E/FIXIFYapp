@@ -18,6 +18,7 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = "0bd24ce2ce9d0ac49fea3f26561cc7fa4fe296ef22964a68594b489c804d4f3a"
 app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "static", "uploads")
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg'}
 DEFAULT_DATABASE_URI = os.environ.get("FIXIFY_DATABASE_URI", "sqlite:///jobs.db")
 app.config["SQLALCHEMY_DATABASE_URI"] = DEFAULT_DATABASE_URI
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
