@@ -1,3 +1,9 @@
+#pip install flask flask-sqlalchemy flask-wtf python-dotenv
+
+#To open db
+#Press Ctrl+Shift+P
+#Type SQLite: New Query and select it
+
 import os
 from datetime import datetime, timedelta
 
