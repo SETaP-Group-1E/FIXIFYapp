@@ -1,7 +1,5 @@
 # Bidding System Automated Test Report
 
-Date: 11 May 2026
-
 Framework: Pytest with Flask-Testing
 
 Test source: `../tests/test_app.py`
@@ -53,9 +51,6 @@ The automated tests use a Flask testbed instead of manually clicking through the
 - Job completion through `/complete-job/<job_id>/<bid_id>`, including homeowner confirmation, contractor confirmation, both-party completion, accepted-bid-only checks, wrong contractor sessions, and missing role checks.
 - Quick chat through `/quick-chat/<job_id>/<bid_id>`, including accepted-bid-only access, homeowner messages, contractor messages, empty messages, whitespace messages, and unread notification targeting.
 
-## Lecturer Guideline Match
-
-This follows the automated testing guidance by keeping the tests in version control, using Pytest to run them automatically, checking actual outputs against expected outputs with assertions, and generating a JUnit XML report as evidence of the test run.
 
 ## Files Changed Because Of Testing
 
