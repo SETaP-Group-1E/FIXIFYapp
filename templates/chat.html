@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
-<!-- Added: chat page opens only after a bid is accepted. -->
+<!-- Chat page opens only after a bid is accepted. -->
 <div class="dashboard-header mt-5 mb-4">
     <div>
         <span class="eyebrow">Quick chat</span>
@@ -16,21 +16,30 @@
     {% endif %}
 </div>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    {% for category, message in messages %}
-      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
-
 <div class="fixify-card mb-4">
-    <!-- Added: accepted bid summary. -->
     <div class="job-meta mb-3">
         <span>Status: {{ bid['status'] }}</span>
-        <span>Bid: £{{ bid['amount'] }}</span>
+        <span>Bid: GBP {{ "%.2f"|format(bid['amount']) }}</span>
+        <span>Timeline: {{ bid['timeline'] }}</span>
+    </div>
+
+    <div class="mb-4">
+        {% for message in bid.get('chat_messages', []) %}
+            <div class="mb-3 p-3 rounded" style="background: rgba(13, 110, 253, 0.16);">
+                <strong class="text-white">{{ message['sender'] }}</strong>
+                <p class="text-light mb-0">{{ message['message'] }}</p>
+            </div>
+        {% else %}
+            <p class="text-light mb-0">No messages yet.</p>
+        {% endfor %}
+    </div>
+
+    <form method="POST" action="{{ url_for('quick_chat', job_id=job['id'], bid_id=bid['id']) }}">
+        <div class="form-group">
+            <label for="message" class="text-white font-weight-bold">Message</label>
+            <textarea id="message" name="message" class="form-control" rows="3" placeholder="Write a quick update..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-fixify">Send message</button>
+    </form>
+</div>
+{% endblock %}

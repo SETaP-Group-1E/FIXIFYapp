@@ -876,7 +876,7 @@ def quick_chat(job_id, bid_id):
     if role in ("homeowner", "contractor"):
         mark_quick_chat_notifications_read(bid, role)
 
-    return render_template("quick_chat.html", job=job, bid=bid)
+    return render_template("chat.html", job=job, bid=bid)
 
 
 @app.route("/post", methods=['GET', 'POST'])
