@@ -4,6 +4,12 @@ Read the Docs deployment
 The documentation is configured for Read the Docs using the official Sphinx
 project layout from the tutorial.
 
+Live documentation
+------------------
+
+The published project documentation is available at
+https://fixifyapp.readthedocs.io/.
+
 Repository files
 ----------------
 
