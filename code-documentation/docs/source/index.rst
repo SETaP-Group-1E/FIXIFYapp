@@ -5,8 +5,8 @@ Fixify documentation
 contractors. Homeowners can post repair jobs, contractors can submit bids,
 accepted bids can move into quick chat, and completed jobs can collect reviews.
 
-This documentation follows the Read the Docs Sphinx tutorial structure while
-describing the actual Fixify application instead of the tutorial sample project.
+This documentation explains the app from both angles: what the user can do and
+how the code is organised for development.
 
 .. note::
 
@@ -22,6 +22,7 @@ Documentation contents
    :caption: User and project guide
 
    overview
+   features
    usage
    setup
    workflows
