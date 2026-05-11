@@ -18,17 +18,18 @@ Application setup
 Database models
 ---------------
 
+The database tables are documented in more detail on the :doc:`database` page.
+This section keeps the generated API reference focused on the Fixify model
+classes instead of inherited SQLAlchemy internals.
+
 .. autoclass:: main.Job
-   :members:
 
 .. autoclass:: main.Bid
-   :members:
 
 .. autoclass:: main.Profile
-   :members:
 
 .. autoclass:: main.Review
-   :members:
+   :members: can_edit
 
 Bidding helpers
 ---------------
