@@ -34,7 +34,7 @@ def create_app(testing=False):
 # Added: database job model is now part of main.py.
 class Job(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(100), nullable=False)
+    title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, default="")
     location = db.Column(db.String(100), nullable=False)
     category = db.Column(db.String(50), nullable=False)
@@ -878,55 +878,112 @@ def quick_chat(job_id, bid_id):
 
     return render_template("chat.html", job=job, bid=bid)
 
-
-@app.route("/post", methods=['GET', 'POST'])
+@app.route("/post", methods=["GET", "POST"])
 def post():
-    if request.method == 'POST':
-        title = request.form.get('title')
-        # Expanded: description is optional.
-        description = request.form.get('description', '')
-        budget = request.form.get('budget_amount')
-        negotiable = request.form.get('is_negotiable')
-        recurring = request.form.get('recurring')
-        recurring_frequency = request.form.get('recurring_frequency')
-        if recurring == 'yes' and not recurring_frequency:
-            flash("Please select how often the job should recur.", "danger")
-            return redirect(url_for('post'))
-        category = request.form.get('category')
-        custom_category = request.form.get('custom_category', '').strip()
-        job_id = next_job_id()
 
+    if "role" not in session:
+        flash("Please choose homeowner first.", "danger")
+        return redirect(url_for("setup_profile", role="homeowner"))
 
-        # Expanded: use the custom category when Other is selected.
-        if category == 'Other' and custom_category:
-            category = custom_category
+    if session.get("role") != "homeowner":
+        flash("Only homeowners can post jobs.", "danger")
+        return redirect(url_for("home"))
 
-        # Expanded: save uploaded job photos for contractor cards.
-        photo_filename = save_uploaded_photo(request.files.get('photo'), f"job_{job_id}")
+    if request.method == "GET":
+        return render_template("post.html")
 
-        new_job = {
-            'id': job_id,
-            'title': title,
-            'description': description,
-            'category': category,
-            'urgency': request.form.get('urgency'),
-            'location': request.form.get('location'),
-            'photo_filename': photo_filename,
-            'budget': budget if budget else "Open",
-            'is_negotiable': True if negotiable == 'yes' else False,
-            'recurring': True if recurring == 'yes' else False,
-            'recurring_frequency': recurring_frequency,
-            'bids': [],
-            'notifications': []
-        }
+    title = request.form.get("title")
+    description = request.form.get("description")
+    category = request.form.get("category")
+    urgency = request.form.get("urgency")
+    location = request.form.get("location")
+    budget = request.form.get("budget_amount")
+    negotiable = request.form.get("is_negotiable")
 
-        all_jobs.append(new_job)
-        sync_job_to_db(new_job)
-        flash("Job posted successfully!", "success")
-        return redirect(url_for('homeowner_dashboard'))
+    valid_categories = ["Plumbing", "Electrical", "Cleaning", "Painting", "Gardening", "Carpentry"]
+    valid_urgencies = ["Low", "Medium", "High"]
 
-    return render_template('post.html', job=None)
+    if title is None or not title.strip():
+        flash("Please enter a job title.", "danger")
+        return redirect(url_for("post"))
+    title = title.strip()
 
+    if len(title) > 255:
+        flash("Job title is too long.", "danger")
+        return redirect(url_for("post"))
+
+    if description is None or not description.strip():
+        flash("Please enter a job description.", "danger")
+        return redirect(url_for("post"))
+    description = description.strip()
+
+    if len(description) > 1500:
+        flash("Description is too long.", "danger")
+        return redirect(url_for("post"))
+
+    if category is None:
+        flash("Please select a category.", "danger")
+        return redirect(url_for("post"))
+
+    if category not in valid_categories:
+        flash("Invalid category.", "danger")
+        return redirect(url_for("post"))
+
+    if urgency is None:
+        flash("Please select an urgency.", "danger")
+        return redirect(url_for("post"))
+
+    if urgency not in valid_urgencies:
+        flash("Invalid urgency.", "danger")
+        return redirect(url_for("post"))
+
+    if location is None or not location.strip():
+        flash("Please enter a location.", "danger")
+        return redirect(url_for("post"))
+    location = location.strip()
+
+    if len(location) > 100:
+        flash("Location is too long.", "danger")
+        return redirect(url_for("post"))
+
+    if budget is None or str(budget).strip() == "":
+        flash("Please enter a budget.", "danger")
+        return redirect(url_for("post"))
+
+    try:
+        budget_value = float(budget)
+    except:
+        flash("Budget must be a valid positive number.", "danger")
+        return redirect(url_for("post"))
+
+    if budget_value <= 0:
+        flash("Budget must be a valid positive number.", "danger")
+        return redirect(url_for("post"))
+
+    if negotiable == "true":
+        negotiable_bool = True
+    elif negotiable == "false" or negotiable is None:
+        negotiable_bool = False
+    else:
+        flash("Invalid negotiable value.", "danger")
+        return redirect(url_for("post"))
+
+    job = Job(
+        title=title,
+        description=description,
+        category=category,
+        urgency=urgency,
+        location=location,
+        budget=budget_value,
+        is_negotiable=negotiable_bool,
+        status="pending"
+    )
+
+    db.session.add(job)
+    db.session.commit()
+
+    flash("Job posted successfully!", "success")
+    return redirect(url_for("homeowner_dashboard"))
 
 @app.route("/job/<int:job_id>/edit", methods=["GET", "POST"])
 def edit_job(job_id):
