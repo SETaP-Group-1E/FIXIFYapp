@@ -182,3 +182,165 @@ class TestPostJob(PostingTestBase):
         rv = self._post(data)
         self.assertIn(b"Invalid category.", rv.data)
         self.assertIsNone(self._latest())
+
+    def test_urgency_missing(self):
+        self._set_session("homeowner")
+        data = self.valid_data()
+        data.pop("urgency")
+        rv = self._post(data)
+        self.assertIn(b"Please select an urgency.", rv.data)
+        self.assertIsNone(self._latest())
+
+    def test_urgency_valid(self):
+        self._set_session("homeowner")
+        self._post(self.valid_data())
+        self.assertEqual(self._latest().urgency, "High")
+
+    def test_urgency_invalid(self):
+        self._set_session("homeowner")
+        data = self.valid_data()
+        data["urgency"] = "Immediate"
+        rv = self._post(data)
+        self.assertIn(b"Invalid urgency.", rv.data)
+        self.assertIsNone(self._latest())
+
+    def test_urgency_case_mismatch(self):
+        self._set_session("homeowner")
+        data = self.valid_data()
+        data["urgency"] = "high"
+        rv = self._post(data)
+        self.assertIn(b"Invalid urgency.", rv.data)
+        self.assertIsNone(self._latest())
+
+    def test_location_missing(self):
+        self._set_session("homeowner")
+        data = self.valid_data()
+        data.pop("location")
+        rv = self._post(data)
+        self.assertIn(b"Please enter a location.", rv.data)
+        self.assertIsNone(self._latest())
+
+    def test_location_valid(self):
+        self._set_session("homeowner")
+        self._post(self.valid_data())
+        self.assertEqual(self._latest().location, "Portsmouth")
+
+    def test_location_whitespace(self):
+        self._set_session("homeowner")
+        data = self.valid_data()
+        data["location"] = "   "
+        rv = self._post(data)
+        self.assertIn(b"Please enter a location.", rv.data)
+        self.assertIsNone(self._latest())
+
+    def test_location_very_long(self):
+        self._set_session("homeowner")
+        data = self.valid_data()
+        data["location"] = "A" * 200
+        rv = self._post(data)
+        self.assertIn(b"Location is too long.", rv.data)
+        self.assertIsNone(self._latest())
+
+    def test_budget_missing(self):
+        self._set_session("homeowner")
+        data = self.valid_data()
+        data.pop("budget_amount")
+        rv = self._post(data)
+        self.assertIn(b"Please enter a budget.", rv.data)
+        self.assertIsNone(self._latest())
+
+    def test_budget_non_numeric(self):
+        self._set_session("homeowner")
+        data = self.valid_data()
+        data["budget_amount"] = "abc"
+        rv = self._post(data)
+        self.assertIn(b"Budget must be a valid positive number.", rv.data)
+        self.assertIsNone(self._latest())
+
+    def test_budget_zero(self):
+        self._set_session("homeowner")
+        data = self.valid_data()
+        data["budget_amount"] = "0"
+        rv = self._post(data)
+        self.assertIn(b"Budget must be a valid positive number.", rv.data)
+        self.assertIsNone(self._latest())
+
+    def test_budget_negative(self):
+        self._set_session("homeowner")
+        data = self.valid_data()
+        data["budget_amount"] = "-50"
+        rv = self._post(data)
+        self.assertIn(b"Budget must be a valid positive number.", rv.data)
+        self.assertIsNone(self._latest())
+
+    def test_budget_valid_integer(self):
+        self._set_session("homeowner")
+        self._post(self.valid_data())
+        self.assertEqual(self._latest().budget, 200.0)
+
+    def test_budget_valid_float(self):
+        self._set_session("homeowner")
+        data = self.valid_data()
+        data["budget_amount"] = "199.99"
+        self._post(data)
+        self.assertEqual(self._latest().budget, 199.99)
+
+    def test_budget_currency(self):
+        self._set_session("homeowner")
+        data = self.valid_data()
+        data["budget_amount"] = "£200"
+        rv = self._post(data)
+        self.assertIn(b"Budget must be a valid positive number.", rv.data)
+        self.assertIsNone(self._latest())
+
+    def test_budget_large(self):
+        self._set_session("homeowner")
+        data = self.valid_data()
+        data["budget_amount"] = "9999999"
+        self._post(data)
+        self.assertEqual(self._latest().budget, 9999999.0)
+
+    def test_negotiable_false(self):
+        self._set_session("homeowner")
+        self._post(self.valid_data())
+        self.assertFalse(self._latest().is_negotiable)
+
+    def test_negotiable_true(self):
+        self._set_session("homeowner")
+        data = self.valid_data()
+        data["is_negotiable"] = "true"
+        self._post(data)
+        self.assertTrue(self._latest().is_negotiable)
+
+    def test_negotiable_invalid(self):
+        self._set_session("homeowner")
+        data = self.valid_data()
+        data["is_negotiable"] = "maybe"
+        rv = self._post(data)
+        self.assertIn(b"Invalid negotiable value.", rv.data)
+        self.assertIsNone(self._latest())
+
+    def test_all_valid_fields(self):
+        self._set_session("homeowner")
+        rv = self._post(self.valid_data())
+        self.assertEqual(rv.status_code, 200)
+        job = self._latest()
+        self.assertEqual(job.title, "Fix Boiler")
+        self.assertEqual(job.description, "Boiler leaking.")
+        self.assertEqual(job.category, "Plumbing")
+        self.assertEqual(job.urgency, "High")
+        self.assertEqual(job.location, "Portsmouth")
+        self.assertEqual(job.budget, 200.0)
+        self.assertFalse(job.is_negotiable, False)
+
+    def test_one_required_field_missing(self):
+        self._set_session("homeowner")
+        rv = self._post(self.valid_data())
+        self.assertEqual(rv.status_code, 200)
+        job = self._latest()
+        self.assertEqual(job.title, "Fix Boiler")
+        self.assertEqual(job.description, "Boiler leaking.")
+        self.assertEqual(job.category, "Plumbing")
+        self.assertEqual(job.urgency, "High")
+        self.assertEqual(job.location, "Portsmouth")
+        self.assertEqual(job.budget, 200.0)
