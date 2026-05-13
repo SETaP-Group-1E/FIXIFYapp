@@ -960,14 +960,16 @@ def post():
         flash("Budget must be a valid positive number.", "danger")
         return redirect(url_for("post"))
 
-    if negotiable == "true":
+    negotiable = request.form.get("is_negotiable")
+
+    if negotiable == "yes":
         negotiable_bool = True
-    elif negotiable == "false" or negotiable is None:
+    elif negotiable == "no":
         negotiable_bool = False
     else:
         flash("Invalid negotiable value.", "danger")
         return redirect(url_for("post"))
-
+    
     job = Job(
         title=title,
         description=description,
