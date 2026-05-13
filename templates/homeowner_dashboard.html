@@ -1,275 +1,145 @@
 {% extends "layout.html" %}
 {% block content %}
-
+<!-- Added: homeowner dashboard for posted jobs. -->
 <div class="dashboard-header mt-5 mb-4">
     <div>
         <span class="eyebrow">Homeowner dashboard</span>
         <h1 class="text-white font-weight-bold mt-2">Your posted jobs</h1>
-        <p class="text-light mb-0">
-            Track your jobs and review every contractor bid from one place.
-        </p>
+        <p class="text-light mb-0">Track your jobs and review every contractor bid from one place.</p>
     </div>
-
     <div class="d-flex flex-wrap mt-3 mt-md-0" style="gap: 0.5rem;">
-        <a href="{{ url_for('my_profile') }}" class="btn btn-outline-light">
-            My Profile
-        </a>
-
-        <a href="{{ url_for('post') }}" class="btn btn-fixify">
-            Post a Job
-        </a>
+        <a href="{{ url_for('my_profile') }}" class="btn btn-outline-light">My Profile</a>
+        <a href="{{ url_for('post') }}" class="btn btn-fixify">Post a Job</a>
     </div>
 </div>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                {{ message }}
-
-                <button type="button"
-                        class="close"
-                        data-dismiss="alert"
-                        aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        {% endfor %}
-    {% endif %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+    {% endfor %}
+  {% endif %}
 {% endwith %}
 
 {% if chat_notifications %}
+<!-- Added: quick chat alerts for unread contractor messages. -->
 <div class="mb-4">
     {% for notification in chat_notifications %}
-        <a href="{{ url_for('quick_chat',
-                            job_id=notification.job_id,
-                            bid_id=notification.bid_id) }}"
-           class="alert alert-info d-block text-decoration-none">
-
-            <strong>New quick chat message</strong>
-            from {{ notification.sender }}
-            about "{{ notification.job_title }}":
-            {{ notification.message }}
-        </a>
+    <a href="{{ url_for('quick_chat', job_id=notification.job_id, bid_id=notification.bid_id) }}" class="alert alert-info d-block text-decoration-none">
+        <strong>New quick chat message</strong> from {{ notification.sender }} about "{{ notification.job_title }}":
+        {{ notification.message }}
+    </a>
     {% endfor %}
 </div>
 {% endif %}
 
 <div class="row mb-4">
-
+    <!-- Added: homeowner summary cards. -->
     <div class="col-md-4 mb-3">
         <div class="stat-card">
             <span>Jobs posted</span>
             <strong>{{ jobs|length }}</strong>
         </div>
     </div>
-
     <div class="col-md-4 mb-3">
         <div class="stat-card">
             <span>Total bids received</span>
             <strong>{{ total_bids }}</strong>
         </div>
     </div>
-
     <div class="col-md-4 mb-3">
         <div class="stat-card">
             <span>Next action</span>
             <strong>Review bids</strong>
         </div>
     </div>
-
 </div>
 
 <div class="row">
-
-{% for job in jobs %}
-
+    {% for job in jobs %}
     {% set accepted_bid = get_accepted_bid(job) %}
-
     <div class="col-lg-6 mb-4">
-
         <div class="fixify-card h-100">
-
-            {% if job.photo_filename %}
-                <img src="{{ url_for('static',
-                                     filename='uploads/' + job.photo_filename) }}"
-                     alt="Photo for {{ job.title }}"
-                     class="job-photo mb-3">
+            <!-- Added: posted job details include optional photo. -->
+            {% if job.get('photo_filename') %}
+            <img src="{{ url_for('static', filename='uploads/' + job['photo_filename']) }}" alt="Photo for {{ job['title'] }}" class="job-photo mb-3">
             {% endif %}
 
             <div class="d-flex justify-content-between align-items-start">
-
                 <div>
-                    <h4 class="font-weight-bold text-white">
-                        {{ job.title }}
-                    </h4>
-
-                    <p class="text-light">
-                        {{ job.description }}
-                    </p>
+                    <h4 class="font-weight-bold text-white">{{ job['title'] }}</h4>
+                    <p class="text-light">{{ job['description'] }}</p>
                 </div>
-
-                <span class="bid-count">
-                    {{ job.bids|length if job.bids else 0 }}
-                </span>
-
+                <span class="bid-count">{{ job['bids']|length }}</span>
             </div>
 
             <div class="job-meta mb-3">
-
-                <span>{{ job.category }}</span>
-                <span>{{ job.urgency }}</span>
-                <span>{{ job.location }}</span>
-
-                <span>
-                    Budget:
-                    £{{ job.budget }}
-                </span>
-
+                <span>{{ job['category'] }}</span>
+                <span>{{ job['urgency'] }}</span>
+                <span>{{ job['location'] }}</span>
+                <span>Budget: ${{ job['budget'] }}</span>
             </div>
 
-            {% if job.notifications and job.notifications|length > 0 %}
-                <div class="alert alert-info py-2">
-                    <small>
-                        <strong>Latest homeowner update:</strong>
-                        {{ job.notifications[-1] }}
-                    </small>
-                </div>
+            {% if job.get('notifications') and job['notifications']|length > 0 %}
+            <div class="alert alert-info py-2">
+                <small><strong>Latest homeowner update:</strong> {{ job['notifications'][-1] }}</small>
+            </div>
             {% endif %}
 
             {% if accepted_bid %}
-
-                <div class="alert alert-primary py-2">
-                    <small>
-
-                        <strong>Accepted:</strong>
-                        {{ accepted_bid.contractor_name }}
-
-                        |
-
-                        <strong>
-                            {{ accepted_bid.completion_status }}
-                        </strong>
-
-                        |
-
-                        Homeowner:
-                        {{ 'Done' if accepted_bid.homeowner_completed else 'Waiting' }}
-
-                        |
-
-                        Contractor:
-                        {{ 'Done' if accepted_bid.contractor_completed else 'Waiting' }}
-
-                    </small>
-                </div>
-
+            <!-- Added: accepted bid completion status. -->
+            <div class="alert alert-primary py-2">
+                <small>
+                    <strong>Accepted:</strong> {{ accepted_bid['contractor_name'] }}
+                    | <strong>{{ accepted_bid['completion_status'] }}</strong>
+                    | Homeowner: {{ 'Done' if accepted_bid['homeowner_completed'] else 'Waiting' }}
+                    | Contractor: {{ 'Done' if accepted_bid['contractor_completed'] else 'Waiting' }}
+                </small>
+            </div>
             {% endif %}
 
             <div class="d-flex flex-wrap gap-2" style="gap: 0.5rem;">
-
-                <a href="{{ url_for('view_job_bids',
-                                    job_id=job.id) }}"
-                   class="btn btn-outline-light">
-
-                    View Bids
-                    ({{ job.bids|length if job.bids else 0 }})
-
+                <!-- Added: homeowner job actions for view, edit, and delete. -->
+                <a href="{{ url_for('view_job_bids', job_id=job['id']) }}" class="btn btn-outline-light">
+                    View Bids ({{ job['bids']|length }})
                 </a>
-
-                <a href="{{ url_for('edit_job',
-                                    job_id=job.id) }}"
-                   class="btn btn-outline-info">
-
-                    Edit
-
-                </a>
-
-                <form action="{{ url_for('delete_job',
-                                         job_id=job.id) }}"
-                      method="POST"
-                      class="d-inline">
-
-                    <button type="submit"
-                            class="btn btn-outline-danger">
-
-                        Delete
-
-                    </button>
-
+                <a href="{{ url_for('edit_job', job_id=job['id']) }}" class="btn btn-outline-info">Edit</a>
+                <form action="{{ url_for('delete_job', job_id=job['id']) }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-outline-danger">Delete</button>
                 </form>
-
             </div>
 
             {% if accepted_bid %}
+            <div class="mt-3">
+                <!-- Added: completion and review actions. -->
+                {% if not accepted_bid['homeowner_completed'] %}
+                <form action="{{ url_for('complete_job', job_id=job['id'], bid_id=accepted_bid['id']) }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-fixify btn-sm">Mark Completed as Homeowner</button>
+                </form>
+                {% endif %}
 
-                <div class="mt-3">
-
-                    {% if not accepted_bid.homeowner_completed %}
-
-                        <form action="{{ url_for('complete_job',
-                                                 job_id=job.id,
-                                                 bid_id=accepted_bid.id) }}"
-                              method="POST"
-                              class="d-inline">
-
-                            <button type="submit"
-                                    class="btn btn-fixify btn-sm">
-
-                                Mark Completed as Homeowner
-
-                            </button>
-
-                        </form>
-
-                    {% endif %}
-
-                    {% if is_bid_completed(accepted_bid) %}
-
-                        <a href="{{ url_for('submit_review',
-                                            job_id=job.id,
-                                            bid_id=accepted_bid.id) }}"
-                           class="btn btn-success btn-sm">
-
-                            Leave Review
-
-                        </a>
-
-                    {% endif %}
-
-                </div>
-
+                {% if is_bid_completed(accepted_bid) %}
+                <a href="{{ url_for('submit_review', job_id=job['id'], bid_id=accepted_bid['id']) }}" class="btn btn-success btn-sm">
+                    Leave Review
+                </a>
+                {% endif %}
+            </div>
             {% endif %}
-
         </div>
-
     </div>
-
-{% else %}
-
+    {% else %}
     <div class="col-12">
-
         <div class="empty-state">
-
             <h3>No jobs posted yet</h3>
-
-            <p>
-                Create your first job so contractors can start bidding.
-            </p>
-
-            <a href="{{ url_for('post') }}"
-               class="btn btn-fixify">
-
-                Post Your First Job
-
-            </a>
-
+            <p>Create your first job so contractors can start bidding.</p>
+            <a href="{{ url_for('post') }}" class="btn btn-fixify">Post Your First Job</a>
         </div>
-
     </div>
-
-{% endfor %}
-
+    {% endfor %}
 </div>
-
 {% endblock content %}
