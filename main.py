@@ -599,9 +599,18 @@ def is_bid_completed(bid):
 
 def get_accepted_bid(job):
     # Added: return the accepted bid for a job, if one exists.
-    bid = next((b for b in job["bids"] if b.get("status") == "Accepted"), None)
+
+    if not hasattr(job, "bids") or not job.bids:
+        return None
+
+    bid = next(
+        (b for b in job.bids if getattr(b, "status", None) == "Accepted"),
+        None
+    )
+
     if bid:
         ensure_bid_completion_fields(bid)
+
     return bid
 
 
@@ -644,12 +653,24 @@ def mark_quick_chat_notifications_read(bid, target_role):
 
 @app.route("/homeowner-dashboard")
 def homeowner_dashboard():
-    # Added: homeowner view for posted jobs and bids.
+
+    if "role" not in session:
+        flash("Please log in first.", "danger")
+        return redirect(url_for("login"))
+
     session["role"] = "homeowner"
-    total_bids = sum(len(job["bids"]) for job in all_jobs)
+
+    jobs = Job.query.all()
+
+    total_bids = 0
+
+    for job in jobs:
+        if hasattr(job, "bids") and job.bids:
+            total_bids += len(job.bids)
+
     return render_template(
         "homeowner_dashboard.html",
-        jobs=all_jobs,
+        jobs=jobs,
         total_bids=total_bids,
         chat_notifications=get_quick_chat_notifications("homeowner"),
         get_accepted_bid=get_accepted_bid,
@@ -969,7 +990,6 @@ def post():
     else:
         flash("Invalid negotiable value.", "danger")
         return redirect(url_for("post"))
-    
     job = Job(
         title=title,
         description=description,
