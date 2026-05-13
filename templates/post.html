@@ -59,9 +59,9 @@
                         </h5>
                         
                         <div class="mb-3">
-                            <label class="form-label">Your Budget Amount ($)</label>
+                            <label class="form-label">Your Budget Amount (£)</label>
                             <div class="input-group">
-                                <div class="input-group-prepend"><span class="input-group-text">$</span></div>
+                                <div class="input-group-prepend"><span class="input-group-text">£</span></div>
                                 <input type="number" name="budget_amount" class="form-control" min="0" step="0.01"
                                        value="{{ job['budget'] if job and job['budget'] != 'Open' else '' }}" placeholder="e.g., 150.00">
                             </div>
@@ -166,9 +166,12 @@
                         </select>
                     </div> 
 
-                    <button type="submit" class="btn btn-success btn-lg btn-block">
-                        {% if job %}Update Job{% else %}Post Job Now{% endif %}
-                    </button>
+                    <div class="d-flex flex-wrap mt-4" style="gap: 0.75rem;">
+                        <button type="submit" class="btn btn-success btn-lg flex-fill">
+                            {% if job %}Update Job{% else %}Post Job Now{% endif %}
+                        </button>
+                        <a href="{{ url_for('homeowner_dashboard') }}" class="btn btn-outline-secondary btn-lg flex-fill">Cancel</a>
+                    </div>
                 </form>
             </div>
         </div>

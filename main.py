@@ -683,7 +683,7 @@ def contractor_bids():
 
     for job in all_jobs:
         for bid in job["bids"]:
-            if bid["contractor_id"] == contractor_id:
+            if bid["contractor_id"] == contractor_id and bid.get("status") != "Rejected":
                 if bid["status"] == "Accepted":
                     ensure_bid_completion_fields(bid)
                 my_bids.append({
@@ -1068,7 +1068,7 @@ def view_job_bids(job_id):
     timeline = request.args.get('timeline', '').strip().lower()
     min_rating = request.args.get('min_rating', type=float)
 
-    filtered_bids = job['bids']
+    filtered_bids = [bid for bid in job['bids'] if bid.get('status') != 'Rejected']
     for bid in filtered_bids:
         if bid["status"] == "Accepted":
             ensure_bid_completion_fields(bid)

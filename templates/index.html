@@ -179,7 +179,7 @@
                                 <div class="mb-2">
                                     <span class="budget-badge {% if job.is_negotiable %}negotiable{% else %}non-negotiable{% endif %}">
                                         <i class="bi {% if job.is_negotiable %}bi-cash-coin{% else %}bi-coin{% endif %} me-1"></i>
-                                        <span class="budget-amount">${{ '%.2f'|format(job.budget) }}</span>
+                                        <span class="budget-amount">£{{ '%.2f'|format(job.budget) }}</span>
                                         {% if job.is_negotiable %}<span class="text-muted ms-1">(Negotiable)</span>{% endif %}
                                     </span>
                                 </div>
