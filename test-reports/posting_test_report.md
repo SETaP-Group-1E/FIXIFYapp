@@ -8,10 +8,11 @@ XML Evidence: `...test-reports/posting_test_report.xml`
 
 Command Used:
 
-# Bash
+```bash
 PS C:\Users\User\OneDrive - University of Portsmouth\Documents\SETAP\Fixify1> python -m pytest -v tests/test_app.py::TestPostJob --junitxml=test-reports/posting_test_report.xml
-
+```
 # Result
+```bash
 =================================================== test session starts ================================================================
 platform win32 -- Python 3.14.2, pytest-9.0.3, pluggy-1.6.0 -- C:\Python314\python.exe
 cachedir: .pytest_cache
@@ -62,7 +63,7 @@ tests/test_app.py::TestPostJob::test_urgency_valid PASSED                       
 
 -------- generated xml file: C:\Users\User\OneDrive - University of Portsmouth\Documents\SETAP\Fixify1\test-reports\posting_test_report.xml -------- 
 ==================================================== 41 passed in 5.22s ================================================================
-
+```
 # Summary
 
 Total: 41/41 Passed
@@ -85,10 +86,10 @@ Our second test run gave back 37/41 passed test outputs and 3/41 failed test oup
 
 Failed tests:
 
-test_urgency_case_mismatch
-test_urgency_invalid
-test_urgency_missing
-test_urgency_valid
+`test_urgency_case_mismatch`
+`test_urgency_invalid`
+`test_urgency_missing`
+`test_urgency_valid`
 
 Showing us that our urgency tests were not functioning correctly. After resolving the issue with the urgency testing we did our final test, shown at the top of the page.
 
