@@ -93,3 +93,21 @@ Failed tests:
 
 Showing us that our urgency tests were not functioning correctly. After resolving the issue with the urgency testing we did our final test, shown at the top of the page.
 
+
+# Testbed
+The automated posting tests use a Flask testbed instead of manually interacting with the website. The testbed creates the application using `create_app(testing=True)`, uses the Flask test client to send requests to the `/post` route, creates and drops an in-memory SQLite database before and after each test, and clears `all_jobs` so every posting test begins from a clean state.
+
+
+# What Was Tested
+
+- Submitting jobs through `/post`, ncluding homeowner-only access checks, missing role sessions, contractor role restrictions, valid job submissions, and successful page access for homeowners.
+- Job title validation through `/post`, including missing titles, empty titles, whitespace-only titles, valid short titles, very long titles, and titles containing special characters.
+- Job description validation through `/post`, including missing descriptions, empty descriptions, whitespace-only descriptions, valid descriptions, multiline descriptions, and overly long descriptions.
+- Category validation through `/post`, including valid categories, missing categories, invalid categories, incorrect case sensitivity, and categories containing extra spaces.
+- Urgency validation through `/post`, including valid urgency values, missing urgency selections, invalid urgency values, and incorrect case sensitivity handling.
+- Location validation through `/post`, including valid locations, missing locations, whitespace-only locations, and overly long location values.
+- Budget validation through `/post`, including missing budgets, valid integer budgets, valid float budgets, non-numeric inputs, currency-formatted inputs, zero values, negative values, and very large budget amounts.
+- Negotiable budget validation through `/post`, including valid true and false values and invalid negotiable inputs.
+- Database persistence and saved job record validation through `/post`, including successful storage of valid job submissions and rejection of invalid submissions without
+creating database records.
+- System-wide posting validation through `/post`, including complete valid job submissions, required-field handling checks, and overall verification of posting functionality with all 41 automated posting tests passing successfully.
