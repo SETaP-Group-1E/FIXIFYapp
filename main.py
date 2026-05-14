@@ -185,6 +185,8 @@ all_jobs = []
 DEFAULT_HOMEOWNER_ID = 1
 DEFAULT_CONTRACTOR_ID = 1
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
+VALID_JOB_CATEGORIES = {"Plumbing", "Electrical", "Cleaning", "Gardening"}
+VALID_JOB_URGENCIES = {"High", "Medium", "Low"}
 
 
 def next_job_id():
@@ -207,6 +209,79 @@ def save_uploaded_photo(photo, prefix):
     os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
     photo.save(os.path.join(app.config["UPLOAD_FOLDER"], photo_filename))
     return photo_filename
+
+
+def validate_job_form():
+    # Shared validation for posting and editing service jobs.
+    title = (request.form.get("title") or "").strip()
+    description = (request.form.get("description") or "").strip()
+    category = request.form.get("category")
+    custom_category = request.form.get("custom_category", "").strip()
+    urgency = request.form.get("urgency")
+    location = (request.form.get("location") or "").strip()
+    budget = (request.form.get("budget_amount") or "").strip()
+    negotiable = request.form.get("is_negotiable")
+
+    if not title:
+        flash("Please enter a job title.", "danger")
+        return None
+    if len(title) > 100:
+        flash("Job title is too long.", "danger")
+        return None
+    if len(description) > 1000:
+        flash("Description is too long.", "danger")
+        return None
+
+    if category == "Other" and custom_category:
+        category = custom_category
+    elif not category:
+        flash("Please select a category.", "danger")
+        return None
+    elif category not in VALID_JOB_CATEGORIES:
+        flash("Invalid category.", "danger")
+        return None
+
+    if not urgency:
+        flash("Please select an urgency.", "danger")
+        return None
+    if urgency not in VALID_JOB_URGENCIES:
+        flash("Invalid urgency.", "danger")
+        return None
+
+    if not location:
+        flash("Please enter a location.", "danger")
+        return None
+    if len(location) > 100:
+        flash("Location is too long.", "danger")
+        return None
+
+    if budget:
+        try:
+            budget_value = float(budget)
+        except ValueError:
+            flash("Budget must be a valid positive number.", "danger")
+            return None
+        if budget_value <= 0:
+            flash("Budget must be a valid positive number.", "danger")
+            return None
+
+    if negotiable in ("yes", "true", "on"):
+        is_negotiable = True
+    elif negotiable in ("no", "false", None, ""):
+        is_negotiable = False
+    else:
+        flash("Invalid negotiable value.", "danger")
+        return None
+
+    return {
+        "title": title,
+        "description": description,
+        "category": category,
+        "urgency": urgency,
+        "location": location,
+        "budget": budget if budget else "Open",
+        "is_negotiable": is_negotiable,
+    }
 
 
 def should_use_database():
@@ -556,6 +631,29 @@ def can_edit_review(review):
     return datetime.now() - created_at < timedelta(minutes=1)
 
 
+def read_rating(field_name):
+    # Keep review ratings inside the 1-to-5 star range.
+    raw_rating = request.form.get(field_name)
+    if raw_rating in (None, ""):
+        flash("Rating must be given", "danger")
+        return None
+
+    try:
+        rating = int(raw_rating)
+    except ValueError:
+        flash("Rating must be given", "danger")
+        return None
+
+    if rating < 1:
+        flash("Rating cannot be under 1 star", "danger")
+        return None
+    if rating > 5:
+        flash("Rating cannot be above 5 stars", "danger")
+        return None
+
+    return rating
+
+
 def get_review_for_bid(job, bid, reviewer_type):
     # Added: show saved DB reviews, falling back to the current in-memory bid.
     return get_review_from_db(job["id"], reviewer_type, bid.get("id")) or bid.get("reviews", {}).get(reviewer_type)
@@ -881,39 +979,39 @@ def quick_chat(job_id, bid_id):
 
 @app.route("/post", methods=['GET', 'POST'])
 def post():
+    if session.get("role") is None:
+        flash("Please choose homeowner first.", "danger")
+        return redirect(url_for("home"))
+
+    if session.get("role") != "homeowner":
+        flash("Only homeowners can post jobs.", "danger")
+        return redirect(url_for("home"))
+
     if request.method == 'POST':
-        title = request.form.get('title')
-        # Expanded: description is optional.
-        description = request.form.get('description', '')
-        budget = request.form.get('budget_amount')
-        negotiable = request.form.get('is_negotiable')
+        job_data = validate_job_form()
+        if job_data is None:
+            return redirect(url_for('post'))
+
         recurring = request.form.get('recurring')
         recurring_frequency = request.form.get('recurring_frequency')
         if recurring == 'yes' and not recurring_frequency:
             flash("Please select how often the job should recur.", "danger")
             return redirect(url_for('post'))
-        category = request.form.get('category')
-        custom_category = request.form.get('custom_category', '').strip()
         job_id = next_job_id()
-
-
-        # Expanded: use the custom category when Other is selected.
-        if category == 'Other' and custom_category:
-            category = custom_category
 
         # Expanded: save uploaded job photos for contractor cards.
         photo_filename = save_uploaded_photo(request.files.get('photo'), f"job_{job_id}")
 
         new_job = {
             'id': job_id,
-            'title': title,
-            'description': description,
-            'category': category,
-            'urgency': request.form.get('urgency'),
-            'location': request.form.get('location'),
+            'title': job_data["title"],
+            'description': job_data["description"],
+            'category': job_data["category"],
+            'urgency': job_data["urgency"],
+            'location': job_data["location"],
             'photo_filename': photo_filename,
-            'budget': budget if budget else "Open",
-            'is_negotiable': True if negotiable == 'yes' else False,
+            'budget': job_data["budget"],
+            'is_negotiable': job_data["is_negotiable"],
             'recurring': True if recurring == 'yes' else False,
             'recurring_frequency': recurring_frequency,
             'bids': [],
@@ -939,19 +1037,17 @@ def edit_job(job_id):
         return redirect(url_for("homeowner_dashboard"))
 
     if request.method == "POST":
-        category = request.form.get("category")
-        custom_category = request.form.get("custom_category", "").strip()
+        job_data = validate_job_form()
+        if job_data is None:
+            return redirect(url_for("edit_job", job_id=job_id))
 
-        if category == "Other" and custom_category:
-            category = custom_category
-
-        job["title"] = request.form.get("title")
-        job["description"] = request.form.get("description", "")
-        job["budget"] = request.form.get("budget_amount") or "Open"
-        job["is_negotiable"] = request.form.get("is_negotiable") == "yes"
-        job["category"] = category
-        job["urgency"] = request.form.get("urgency")
-        job["location"] = request.form.get("location")
+        job["title"] = job_data["title"]
+        job["description"] = job_data["description"]
+        job["budget"] = job_data["budget"]
+        job["is_negotiable"] = job_data["is_negotiable"]
+        job["category"] = job_data["category"]
+        job["urgency"] = job_data["urgency"]
+        job["location"] = job_data["location"]
 
         photo_filename = save_uploaded_photo(request.files.get("photo"), f"job_{job_id}")
         if photo_filename:
@@ -1252,11 +1348,19 @@ def db_submit_review(job_id):
         review.photo_filename = photo_filename or review.photo_filename
 
         if is_homeowner:
-            review.quality_rating = int(request.form["quality_rating"])
-            review.punctuality_rating = int(request.form["punctuality_rating"])
-            review.communication_rating = int(request.form["communication_rating"])
+            quality_rating = read_rating("quality_rating")
+            punctuality_rating = read_rating("punctuality_rating")
+            communication_rating = read_rating("communication_rating")
+            if None in (quality_rating, punctuality_rating, communication_rating):
+                return redirect(url_for("db_submit_review", job_id=job_id))
+            review.quality_rating = quality_rating
+            review.punctuality_rating = punctuality_rating
+            review.communication_rating = communication_rating
         else:
-            review.overall_rating = int(request.form["overall_rating"])
+            overall_rating = read_rating("overall_rating")
+            if overall_rating is None:
+                return redirect(url_for("db_submit_review", job_id=job_id))
+            review.overall_rating = overall_rating
 
         db.session.add(review)
         db.session.commit()
@@ -1332,11 +1436,19 @@ def submit_review(job_id, bid_id):
         }
 
         if is_homeowner:
-            review_data["quality_rating"] = int(request.form["quality_rating"])
-            review_data["punctuality_rating"] = int(request.form["punctuality_rating"])
-            review_data["communication_rating"] = int(request.form["communication_rating"])
+            quality_rating = read_rating("quality_rating")
+            punctuality_rating = read_rating("punctuality_rating")
+            communication_rating = read_rating("communication_rating")
+            if None in (quality_rating, punctuality_rating, communication_rating):
+                return redirect(url_for("submit_review", job_id=job_id, bid_id=bid_id))
+            review_data["quality_rating"] = quality_rating
+            review_data["punctuality_rating"] = punctuality_rating
+            review_data["communication_rating"] = communication_rating
         else:
-            review_data["overall_rating"] = int(request.form["overall_rating"])
+            overall_rating = read_rating("overall_rating")
+            if overall_rating is None:
+                return redirect(url_for("submit_review", job_id=job_id, bid_id=bid_id))
+            review_data["overall_rating"] = overall_rating
 
         bid["reviews"][reviewer_type] = review_data
         save_review_to_db(job, reviewer_type, review_data, bid)

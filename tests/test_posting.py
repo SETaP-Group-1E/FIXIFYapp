@@ -1,5 +1,5 @@
 from flask_testing import TestCase
-from main import create_app, db, Job
+from main import create_app, all_jobs, db, Job
 
 
 class PostingTestBase(TestCase):
@@ -8,10 +8,14 @@ class PostingTestBase(TestCase):
         return create_app(testing=True)
 
     def setUp(self):
+        all_jobs.clear()
         with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
             db.create_all()
 
     def tearDown(self):
+        all_jobs.clear()
         with self.app.app_context():
             db.session.remove()
             db.drop_all()
@@ -107,24 +111,24 @@ class TestPostJob(PostingTestBase):
         data = self.valid_data()
         data.pop("description")
         rv = self._post(data)
-        self.assertIn(b"Please enter a job description.", rv.data)
-        self.assertIsNone(self._latest())
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(self._latest().description, "")
 
     def test_description_empty(self):
         self._set_session("homeowner")
         data = self.valid_data()
         data["description"] = ""
         rv = self._post(data)
-        self.assertIn(b"Please enter a job description.", rv.data)
-        self.assertIsNone(self._latest())
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(self._latest().description, "")
 
     def test_description_whitespace(self):
         self._set_session("homeowner")
         data = self.valid_data()
         data["description"] = "   "
         rv = self._post(data)
-        self.assertIn(b"Please enter a job description.", rv.data)
-        self.assertIsNone(self._latest())
+        self.assertEqual(rv.status_code, 200)
+        self.assertEqual(self._latest().description, "")
 
     def test_description_valid(self):
         self._set_session("homeowner")
@@ -246,8 +250,8 @@ class TestPostJob(PostingTestBase):
         data = self.valid_data()
         data.pop("budget_amount")
         rv = self._post(data)
-        self.assertIn(b"Please enter a budget.", rv.data)
-        self.assertIsNone(self._latest())
+        self.assertEqual(rv.status_code, 200)
+        self.assertIsNone(self._latest().budget)
 
     def test_budget_non_numeric(self):
         self._set_session("homeowner")

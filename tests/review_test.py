@@ -52,6 +52,8 @@ class ReviewTestBase(TestCase):
     def setUp(self):
         all_jobs.clear()
         with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
             db.create_all()
 
     def tearDown(self):
@@ -84,7 +86,7 @@ class TestReviewAccess(ReviewTestBase):
         print("\n➔ Testing: Review form not available before job marked as complete")
         self._set_session("homeowner")
         rv = self.client.get("/review/1/1", follow_redirects=True)
-        self.assertFlash(rv, "Cannot review until both the homeowner and contractor mark the job as completed.")
+        self.assertFlash(rv, "Cannot review until homeowner and contractor both mark the job as completed.")
         print("  ✅ Passed")
 
     def test_review_added_to_database(self):
