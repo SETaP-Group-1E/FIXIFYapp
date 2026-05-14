@@ -1304,93 +1304,8 @@ def mark_db_complete(job_id):
     return redirect(url_for("view_job", job_id=job_id))
 
 
-@app.route("/review/<int:job_id>", methods=["GET", "POST"])
-def db_submit_review(job_id):
-    # Kept: database review route, separate from bidding reviews.
-    job = db.session.get(Job, job_id)
-    if job is None:
-        flash("Job not found.", "danger")
-        return redirect(url_for("home"))
-
-    if job.status != "completed":
-        flash("Cannot review until job is marked as completed.", "error")
-        return redirect(url_for("view_job", job_id=job_id))
-
-    is_homeowner = job_id % 2 == 1
-    reviewer_type = "homeowner" if is_homeowner else "provider"
-    review = None
-
-    if request.args.get("edit") == "true":
-        review = Review.query.filter_by(job_id=job_id, reviewer_type=reviewer_type).first()
-
-        if review and not review.can_edit:
-            flash("Review can only be edited within 1 minute of submission.", "error")
-            return redirect(url_for("view_job", job_id=job_id))
-
-        if not review:
-            flash("No review found to edit.", "error")
-            return redirect(url_for("view_job", job_id=job_id))
-    else:
-        existing_review = Review.query.filter_by(job_id=job_id, reviewer_type=reviewer_type).first()
-        if existing_review:
-            flash("You have already reviewed this job.", "error")
-            return redirect(url_for("view_job", job_id=job_id))
-
-    if request.method == "POST":
-        photo_filename = save_uploaded_photo(request.files.get("photo"), f"review_{job_id}_{reviewer_type}")
-
-        if review is None:
-            review = Review(job_id=job_id, reviewer_type=reviewer_type)
-
-        review.homeowner_id = DEFAULT_HOMEOWNER_ID
-        review.contractor_id = DEFAULT_CONTRACTOR_ID
-        review.comment = request.form.get("comment", "")[:500]
-        review.photo_filename = photo_filename or review.photo_filename
-
-        if is_homeowner:
-            quality_rating = read_rating("quality_rating")
-            punctuality_rating = read_rating("punctuality_rating")
-            communication_rating = read_rating("communication_rating")
-            if None in (quality_rating, punctuality_rating, communication_rating):
-                return redirect(url_for("db_submit_review", job_id=job_id))
-            review.quality_rating = quality_rating
-            review.punctuality_rating = punctuality_rating
-            review.communication_rating = communication_rating
-        else:
-            overall_rating = read_rating("overall_rating")
-            if overall_rating is None:
-                return redirect(url_for("db_submit_review", job_id=job_id))
-            review.overall_rating = overall_rating
-
-        db.session.add(review)
-        db.session.commit()
-        flash("Review updated successfully!" if request.args.get("edit") == "true" else "Thank you for your review!", "success")
-        return redirect(url_for("view_job", job_id=job_id))
-
-    return render_template(
-        "review.html",
-        job=job,
-        review=review,
-        is_homeowner=is_homeowner,
-        cancel_url=url_for("view_job", job_id=job_id),
-    )
-
-
-@app.route("/report-review/<int:review_id>")
-def report_review(review_id):
-    # Kept: database review report route.
-    review = db.session.get(Review, review_id)
-    if review is None:
-        flash("Review not found.", "danger")
-        return redirect(url_for("home"))
-
-    flash("Review has been reported to administrators.", "warning")
-    return redirect(url_for("view_job", job_id=review.job_id))
-
-
 @app.route("/review/<int:job_id>/<int:bid_id>", methods=["GET", "POST"])
 def submit_review(job_id, bid_id):
-    # Expanded: completed bidding jobs reuse the existing review form.
     job, bid = find_job_and_bid(job_id, bid_id)
 
     if job is None or bid is None:
@@ -1420,35 +1335,113 @@ def submit_review(job_id, bid_id):
     review = db_review or bid["reviews"].get(reviewer_type)
 
     if request.method == "POST":
-        if review and not can_edit_review(review):
-            flash("Review can only be edited within 1 minute of submission.", "warning")
-            return redirect(cancel_url)
+        
+        # 1. EDITING CHECKS (If a review already exists)
+        if review:
+            if not can_edit_review(review):
+                flash("Review can only be edited within 1 minute of submission.", "warning")
+                return redirect(cancel_url)
+            
+            # Check if it was already edited once
+            if review.get("edit_count", 0) >= 1:
+                flash("Review cannot be changed more than once", "danger")
+                return redirect(cancel_url)
+            
+            # Check if any changes were actually made
+            has_changes = False
+            new_comment = request.form.get("comment", "")
+            if new_comment != review.get("comment", ""):
+                has_changes = True
+                
+            photo = request.files.get("photo")
+            if photo and photo.filename:
+                has_changes = True
+                
+            if is_homeowner:
+                q = request.form.get("quality_rating")
+                p = request.form.get("punctuality_rating")
+                c = request.form.get("communication_rating")
+                if str(q) != str(review.get("quality_rating")) or str(p) != str(review.get("punctuality_rating")) or str(c) != str(review.get("communication_rating")):
+                    has_changes = True
+            else:
+                o = request.form.get("overall_rating")
+                if str(o) != str(review.get("overall_rating")):
+                    has_changes = True
+                    
+            if not has_changes:
+                flash("Edit will not be posted.", "warning")
+                return redirect(cancel_url)
 
-        photo_filename = save_uploaded_photo(request.files.get("photo"), f"review_{job_id}_{bid_id}_{reviewer_type}")
+        # 2. VALIDATE COMMENT
+        comment = request.form.get("comment", "")
+        if not comment.strip():
+            flash("please fill in the required field", "danger")
+            return redirect(request.url)
+        if len(comment) > 500:
+            flash("Comment cannot be over 500 characters", "danger")
+            return redirect(request.url)
+
+        # 3. VALIDATE IMAGE FORMAT
+        photo = request.files.get("photo")
+        if photo and photo.filename:
+            if not allowed_file(photo.filename):
+                flash("Error due to invalid format", "danger")
+                return redirect(request.url)
+
+        # 4. VALIDATE RATINGS
+        try:
+            if is_homeowner:
+                q_rating = request.form.get("quality_rating")
+                p_rating = request.form.get("punctuality_rating")
+                c_rating = request.form.get("communication_rating")
+                
+                if not all([q_rating, p_rating, c_rating]):
+                    flash("Rating must be given", "danger")
+                    return redirect(request.url)
+                    
+                ratings = [int(q_rating), int(p_rating), int(c_rating)]
+            else:
+                o_rating = request.form.get("overall_rating")
+                if not o_rating:
+                    flash("Rating must be given", "danger")
+                    return redirect(request.url)
+                    
+                ratings = [int(o_rating)]
+                
+        except ValueError:
+            flash("Rating must be given", "danger")
+            return redirect(request.url)
+
+        # Check bounds
+        for r in ratings:
+            if r < 1:
+                flash("Rating cannot be under 1 star", "danger")
+                return redirect(request.url)
+            if r > 5:
+                flash("Rating cannot be above 5 stars", "danger")
+                return redirect(request.url)
+
+        # 5. SAVE EVERYTHING TO DB
+        photo_filename = save_uploaded_photo(photo, f"review_{job_id}_{bid_id}_{reviewer_type}")
+        
         review_data = {
             "reviewer_type": reviewer_type,
-            "comment": request.form.get("comment", "")[:500],
+            "comment": comment,
             "photo_filename": photo_filename or get_review_photo_filename(review),
             "created_at": get_review_created_at(review) or datetime.now(),
             "homeowner_id": DEFAULT_HOMEOWNER_ID,
             "contractor_id": bid["contractor_id"],
             "bid_id": bid["id"],
+            # Increase the edit count if it's an update!
+            "edit_count": review.get("edit_count", 0) + 1 if review else 0 
         }
 
         if is_homeowner:
-            quality_rating = read_rating("quality_rating")
-            punctuality_rating = read_rating("punctuality_rating")
-            communication_rating = read_rating("communication_rating")
-            if None in (quality_rating, punctuality_rating, communication_rating):
-                return redirect(url_for("submit_review", job_id=job_id, bid_id=bid_id))
-            review_data["quality_rating"] = quality_rating
-            review_data["punctuality_rating"] = punctuality_rating
-            review_data["communication_rating"] = communication_rating
+            review_data["quality_rating"] = ratings[0]
+            review_data["punctuality_rating"] = ratings[1]
+            review_data["communication_rating"] = ratings[2]
         else:
-            overall_rating = read_rating("overall_rating")
-            if overall_rating is None:
-                return redirect(url_for("submit_review", job_id=job_id, bid_id=bid_id))
-            review_data["overall_rating"] = overall_rating
+            review_data["overall_rating"] = ratings[0]
 
         bid["reviews"][reviewer_type] = review_data
         save_review_to_db(job, reviewer_type, review_data, bid)
@@ -1463,6 +1456,17 @@ def submit_review(job_id, bid_id):
         is_homeowner=is_homeowner,
         cancel_url=cancel_url,
     )
+
+@app.route("/report-review/<int:review_id>")
+def report_review(review_id):
+    # Kept: database review report route.
+    review = db.session.get(Review, review_id)
+    if review is None:
+        flash("Review not found.", "danger")
+        return redirect(url_for("home"))
+
+    flash("Review has been reported to administrators.", "warning")
+    return redirect(url_for("view_job", job_id=review.job_id))
 
 
 @app.route("/uploads/<filename>")
