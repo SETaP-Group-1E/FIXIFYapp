@@ -82,7 +82,7 @@ This actually showed us a lot of weaknesses in the restrictive parameters and er
 
 Test run 2:
 
-Our second test run gave back 37/41 passed test outputs and 3/41 failed test ouputs.
+Our second test run gave back 37/41 passed test outputs and 4/41 failed test ouputs.
 
 Failed tests:
 
