@@ -49,8 +49,8 @@ Dashboard routes
      - Shows jobs that are still available for bidding.
    * - ``/contractor-bids``
      - ``GET``
-     - Shows accepted jobs, pending bids, rejected bids, clarification requests,
-       completion controls, reviews, and quick chat links.
+     - Shows accepted jobs, pending bids, clarification requests, completion
+       controls, reviews, and quick chat links. Rejected bids are filtered out.
 
 Job and bid routes
 ------------------
@@ -114,7 +114,8 @@ Profile and review routes
      - Shows homeowner profile details and reviews.
    * - ``/review/<job_id>/<bid_id>``
      - ``GET`` and ``POST``
-     - Creates or edits a review for a completed accepted job.
+     - Creates or edits a review for a completed accepted job. Ratings are
+       required, comments are optional, and edits are time-limited.
    * - ``/report-review/<review_id>``
      - ``GET``
      - Shows the report-review flash flow for a saved review.

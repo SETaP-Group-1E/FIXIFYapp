@@ -42,7 +42,7 @@ two roles:
   reject bids, ask for clarification, mark accepted jobs as completed, and leave
   reviews after both sides complete the job.
 * ``contractor``: view available jobs, submit bids, respond to clarification
-  requests, track accepted/rejected/pending bids, use quick chat after a bid is
+  requests, track pending/accepted/completed bids, use quick chat after a bid is
   accepted, and leave reviews after completion.
 
 Short bidding workflow

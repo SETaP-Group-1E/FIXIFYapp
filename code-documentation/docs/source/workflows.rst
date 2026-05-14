@@ -47,8 +47,8 @@ Bid status is used to control what each side can do.
      - The homeowner accepted the bid. Quick chat and completion controls are
        available.
    * - ``Rejected``
-     - The homeowner rejected the bid. It remains visible in the contractor bid
-       history.
+     - The homeowner rejected the bid. It is removed from the active homeowner
+       and contractor bid screens.
    * - ``Clarification Requested``
      - The homeowner asked the contractor to explain the bid further.
    * - ``Clarification Provided``

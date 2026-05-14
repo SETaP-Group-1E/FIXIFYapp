@@ -92,6 +92,8 @@ Route handlers
      - Records homeowner or contractor completion confirmation.
    * - ``submit_review(job_id, bid_id)``
      - Saves homeowner or contractor review data for a completed accepted job.
+       Star ratings are required, comments are optional, and edits are limited
+       to the short edit window.
    * - ``contractor_profile(contractor_id)``
      - Shows contractor profile, portfolio, and reviews.
    * - ``homeowner_profile(homeowner_id)``
@@ -108,6 +110,15 @@ Bidding helpers
      - Purpose
    * - ``next_job_id()``
      - Generates the next job ID even after jobs have been deleted.
+   * - ``allowed_file(filename)``
+     - Checks whether an uploaded file uses one of the supported image
+       extensions.
+   * - ``save_uploaded_photo(photo, prefix)``
+     - Saves accepted job or review photos into the upload folder with a safe
+       filename.
+   * - ``validate_job_form()``
+     - Validates the shared post/edit job form, including title, category,
+       urgency, location, budget, and optional description.
    * - ``budget_to_float(value)``
      - Safely converts budget text to a database-friendly number.
    * - ``find_job_and_bid(job_id, bid_id)``
@@ -143,6 +154,8 @@ Profiles and reviews
      - Provides fallback profile data when a database profile does not exist.
    * - ``load_profile(role, user_id=None)``
      - Loads a saved profile from the database.
+   * - ``get_profile(role, user_id=None)``
+     - Returns the saved profile or a default profile for display.
    * - ``profile_needs_setup(role)``
      - Decides whether a role should be sent to profile setup.
    * - ``sync_contractor_profile(profile)``
@@ -151,8 +164,16 @@ Profiles and reviews
      - Splits contractor portfolio text into displayable items.
    * - ``save_review_to_db(job, reviewer_type, review_data, bid=None)``
      - Saves or updates review data in SQLite.
+   * - ``get_review_from_db(job_id, reviewer_type, bid_id=None)``
+     - Loads a persisted review for a job, reviewer type, and optional bid.
+   * - ``get_review_created_at(review)``
+     - Reads the creation time from either a database review or in-memory review.
+   * - ``get_review_photo_filename(review)``
+     - Reads the review photo filename from either storage format.
    * - ``get_review_for_bid(job, bid, reviewer_type)``
      - Finds the review linked to an accepted bid.
+   * - ``read_rating(field_name)``
+     - Reads a rating value and keeps review ratings inside the 1-to-5 range.
    * - ``average_review_score(reviews)``
      - Calculates the displayed profile average rating.
    * - ``can_edit_review(review)``

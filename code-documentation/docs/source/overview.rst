@@ -18,8 +18,8 @@ reviewing a completed accepted job:
   status, optional description, and optional job photo.
 * Contractor job browsing and bid submission.
 * Homeowner bid management with accept, reject, and clarification options.
-* Contractor bid history for pending, accepted, rejected, and clarification
-  states.
+* Contractor bid tracking for pending, accepted, completed, and clarification
+  states. Rejected bids are removed from the active bid screens.
 * Quick chat that only opens after a bid is accepted.
 * Completion confirmation by both sides before reviews become available.
 * Database-backed profiles, jobs, bids, and reviews.

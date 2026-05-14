@@ -58,8 +58,9 @@ Contractor features
    * - Submit bid
      - A contractor bid includes amount, timeline, and optional explanation.
    * - Track bids
-     - The ``My Bids`` page groups pending, accepted, rejected, completed, and
-       clarification-related bids.
+     - The ``My Bids`` page groups pending, accepted, completed, and
+       clarification-related bids. Rejected bids are removed from the active
+       contractor view.
    * - Clarification response
      - If the homeowner asks for more detail, the contractor can reply from the
        bid history page.
@@ -105,4 +106,5 @@ The app keeps the user input simple and controlled:
 * Bid amount must be a positive number.
 * Bid explanation is optional.
 * Job description is optional.
+* Review comments are optional, but the required star ratings must be selected.
 * Quick chat messages and clarification responses cannot be empty.
