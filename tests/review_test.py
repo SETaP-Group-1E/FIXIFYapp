@@ -320,13 +320,14 @@ class TestPostingReview(ReviewTestBase):
         job["status"] = "completed"
         all_jobs.append(job)
 
-    def test_invalid_submission_missing_comment(self):
-        print("\n➔ Testing: Invalid Submission: Missing comment")
+    def test_valid_submission_missing_comment(self):
+        print("\n➔ Testing: Valid submission: missing optional comment")
         self._set_session("homeowner")
         rv = self.client.post("/review/1/1", data={
             "quality_rating": "5", "punctuality_rating": "5", "communication_rating": "5", "comment": " "
         }, follow_redirects=True)
-        self.assertFlash(rv, "please fill in the required field")
+        self.assertFlash(rv, "Thank you for your review!")
+        self.assertIn("homeowner", all_jobs[0]["bids"][0]["reviews"])
         print("  ✅ Passed")
 
     def test_invalid_submission_comment_over_500(self):

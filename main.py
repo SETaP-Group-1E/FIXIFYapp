@@ -1374,9 +1374,6 @@ def submit_review(job_id, bid_id):
 
         # 2. VALIDATE COMMENT
         comment = request.form.get("comment", "")
-        if not comment.strip():
-            flash("please fill in the required field", "danger")
-            return redirect(request.url)
         if len(comment) > 500:
             flash("Comment cannot be over 500 characters", "danger")
             return redirect(request.url)
