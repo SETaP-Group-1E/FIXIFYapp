@@ -1270,7 +1270,7 @@ class TestReviewAccess(ReviewTestBase):
         print("\n➔ Testing: Review form not available before a is job marked as complete")
         self._set_session("homeowner")
         rv = self.client.get("/review/1/1", follow_redirects=True)
-        self.assertFlash(rv, " Cannot review a job until both the homeowner and contractor have marked it as completed.")
+        self.assertFlash(rv, "Cannot review until homeowner and contractor both mark the job as completed.")
         print("  ✅ Passed")
 
     def test_review_added_to_database(self):
@@ -1312,7 +1312,7 @@ class TestRatingSubmission(ReviewTestBase):
         rv = self.client.post("/review/1/1", data={
             "quality_rating": "0", "punctuality_rating": "4", "communication_rating": "4", "comment": "Low"
         }, follow_redirects=True)
-        self.assertFlash(rv, "A rating cannot be under 1 star")
+        self.assertFlash(rv, "Rating cannot be under 1 star")
         print("  ✅ Passed")
 
     def test_invalid_submission_high(self):
@@ -1321,14 +1321,14 @@ class TestRatingSubmission(ReviewTestBase):
         rv = self.client.post("/review/1/1", data={
             "quality_rating": "6", "punctuality_rating": "4", "communication_rating": "4", "comment": "High"
         }, follow_redirects=True)
-        self.assertFlash(rv, "A rating cannot be over 5 stars")
+        self.assertFlash(rv, "Rating cannot be above 5 stars")
         print("  ✅ Passed")
 
     def test_missing_rating_homeowner(self):
         print("\n➔ Testing: Homeowner Missing Rating (0 stars/null)")
         self._set_session("homeowner")
         rv = self.client.post("/review/1/1", data={"comment": "No stars"}, follow_redirects=True)
-        self.assertFlash(rv, "A rating must be given")
+        self.assertFlash(rv, "Rating must be given")
         print("  ✅ Passed")
 
     def test_multiple_selection_low_high(self):
@@ -1397,7 +1397,7 @@ class TestRatingGroups(ReviewTestBase):
         print("\n➔ Testing: Invalid contractor Overall rating missing (0 stars/null)")
         self._set_session("contractor", 1)
         rv = self.client.post("/review/1/1", data={"comment": "No overall"}, follow_redirects=True)
-        self.assertFlash(rv, "A rating must be given")
+        self.assertFlash(rv, "Rating must be given")
         print("  ✅ Passed")
 
 #Editing reviews
@@ -1430,7 +1430,7 @@ class TestEditingReview(ReviewTestBase):
         rv = self.client.post("/review/1/1", data={
             "quality_rating": "4", "punctuality_rating": "5", "communication_rating": "5", "comment": "Edited"
         }, follow_redirects=True)
-        self.assertFlash(rv, "Review edited, thank you for your review!")
+        self.assertFlash(rv, "Thank you for your review!")
         print("  ✅ Passed")
 
     def test_edit_after_60_seconds(self):
@@ -1440,7 +1440,7 @@ class TestEditingReview(ReviewTestBase):
         rv = self.client.post("/review/1/1", data={
             "quality_rating": "1", "punctuality_rating": "1", "communication_rating": "1", "comment": "Too late"
         }, follow_redirects=True)
-        self.assertFlash(rv, "Review can only be edited within the time limit")
+        self.assertFlash(rv, "Review can only be edited within 1 minute of submission.")
         print("  ✅ Passed")
 
     def test_edit_submitted_without_changes(self):
@@ -1450,7 +1450,7 @@ class TestEditingReview(ReviewTestBase):
         rv = self.client.post("/review/1/1", data={
             "quality_rating": "5", "punctuality_rating": "5", "communication_rating": "5", "comment": "Original"
         }, follow_redirects=True)
-        self.assertFlash(rv, "Edit not posted, please change a field")
+        self.assertFlash(rv, "Edit will not be posted.")
         print("  ✅ Passed")
 
     def test_edit_submitted_comment_changed(self):
@@ -1529,7 +1529,7 @@ class TestPostingReview(ReviewTestBase):
             "quality_rating": "5", "punctuality_rating": "5", "communication_rating": "5", "comment": "Virus",
             "photo": (io.BytesIO(b"data"), "script.py")
         }, content_type='multipart/form-data', follow_redirects=True)
-        self.assertFlash(rv, "Error, this format for images is not accepted")
+        self.assertFlash(rv, "Error due to invalid format")
         print("  ✅ Passed")
 
     def test_error_to_lacking_input(self):
